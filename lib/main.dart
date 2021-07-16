@@ -25,23 +25,14 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-
+class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 1000),
-    );
-    _animationController.forward();
     super.initState();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -53,35 +44,26 @@ class _MyHomePageState extends State<MyHomePage>
       ),
       body: Column(
         children: [
-          // SlideTransition(position: ,),
-          FadeTransition(
-            opacity: _animationController,
-            child: SearchBar(
-              animationController: _animationController,
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[],
+          SearchBar(),
+          Container(
+            height: 512,
+            child: ListView.separated(
+              itemBuilder: (_, index) => Center(child: Text("$index")),
+              separatorBuilder: (_, __) => Divider(
+                indent: 10,
+                endIndent: 10,
+              ),
+              itemCount: 100,
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        tooltip: 'Search',
-        child: Icon(Icons.search),
       ),
     );
   }
 }
 
 class SearchBar extends StatefulWidget {
-  final AnimationController? animationController;
-
   const SearchBar({
-    @required this.animationController,
     Key? key,
   }) : super(key: key);
 
@@ -101,6 +83,42 @@ class _SearchBarState extends State<SearchBar> {
             icon: Icon(Icons.search),
             onPressed: () {},
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class SearchResult extends StatelessWidget {
+  final String name;
+  const SearchResult({
+    required this.name,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+}
+
+class SearchResultRaw extends StatelessWidget {
+  final String json;
+  const SearchResultRaw({
+    required this.json,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(json * 42),
         ),
       ),
     );
