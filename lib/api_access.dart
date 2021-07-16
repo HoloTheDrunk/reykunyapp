@@ -18,12 +18,39 @@ Future<List<String>> getQueryResult(String query) async {
 }
 
 List<String> singleWordQueryResult(
-    List<dynamic> result, List<dynamic> suggestions) {
-  //! Not implemented
-  return [];
+    List<dynamic> result, List<String> suggestions) {
+  if (result.length == 0) {
+    if (suggestions.length != 0) {
+      return suggestions;
+    } else {
+      return ["No results found."];
+    }
+  }
+
+  List<String> queryResult = [];
+
+  for (int i = 0; i < result.length; i++) {
+    var res = result[i];
+    //TODO Handle each result
+  }
+
+  return queryResult;
 }
 
 List<String> multiWordQueryResult(List<dynamic> result, String query) {
   //! Not implemented
   return [];
+}
+
+String lemmaForm(String word, String type) {
+  if (type == "n:si") {
+    return word + ' si';
+  } else if (type == 'aff:pre') {
+    return word + "-";
+  } else if (type == 'aff:in') {
+    return '‹' + word + '›';
+  } else if (type == 'aff:suf') {
+    return '-' + word;
+  }
+  return word;
 }
