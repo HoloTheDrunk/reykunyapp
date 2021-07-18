@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<List<QueryResult>> getQueryResults(String query) async {
+Future<List<QueryResult>> getQueryResults(String query, String language) async {
   http.Response response = await http.get(
     Uri.parse('https://reykunyu.wimiso.nl/api/fwew?tìpawm=$query'),
   );
@@ -11,35 +11,26 @@ Future<List<QueryResult>> getQueryResults(String query) async {
   if (data.length == 0) {
     throw NullThrownError;
   } else if (data.length == 1) {
-    var queryResult =
-        singleWordQueryResult(data[0]['sì\'eyng'], data[0]['aysämok']);
-    // var converted = [
-    //   QueryResult(
-    //     navi: data[0]['sì\'eyng'][0]['na\'vi'],
-    //     type: data[0]['sì\'eyng'][0]['type'],
-    //     pronunciation: data[0]['sì\'eyng'][0]['pronunciation'],
-    //     infixes: data[0],
-    //   )
-    // ];
-    return queryResult;
+    return singleWordQueryResult(data[0]['sì\'eyng'], data[0]['aysämok']);
   } else {
-    print("Not Implemented");
+    print("Unimplemented");
     return multiWordQueryResult(data, query);
   }
 }
 
 List<QueryResult> singleWordQueryResult(
-    List<dynamic> result, List<String> suggestions) {
+    List<dynamic> result, List<String> suggestions,
+    {String language = 'en'}) {
   if (result.length == 0) {
     return [];
   }
 
-  List<QueryResult> queryResult = [];
+  List<QueryResult> queryResults = [];
 
   for (int i = 0; i < result.length; i++) {
     var res = result[i];
 
-    queryResult.add(
+    queryResults.add(
       QueryResult(
         navi: SpecialString(text: lemmaForm(res['na\'vi'], res['type'])),
         type: SpecialString(text: toReadableType(res['type'])),
@@ -52,15 +43,17 @@ List<QueryResult> singleWordQueryResult(
         status: res.containsKey('status')
             ? SpecialString(text: ':warning: ' + res['status'])
             : null,
-        //TODO Implement conjugation function and auxillaries
-        // conjugation: res.containsKey('conjugated')
-        //\     ? conjugation(res['conjugated'])
-        //     : null,
+        conjugation: res.containsKey('conjugated')
+            ? conjugation(conjugated: res['conjugated'], short: false)
+            : null,
+        translation: getTranslation(res['translations'][0], language: language),
+        meaningNote: res['meaning_note'],
+        affixes: affixesSection(res['affixes']),
       ),
     );
   }
 
-  return queryResult;
+  return queryResults;
 }
 
 List<QueryResult> multiWordQueryResult(List<dynamic> result, String query) {
@@ -142,21 +135,178 @@ List<SpecialString> pronunciationToSpecialStrings(
   return ret;
 }
 
+List<SpecialString> conjugation({var conjugated, bool short = false}) {
+  List<SpecialString> result = [];
+
+  for (int i = 0; i < conjugated.length; i++) {
+    String type = conjugated[i]['type'];
+    var conjugation = conjugated[i]['conjugation'];
+
+    // Continue if not conjugated
+    if (conjugation['result'].toLowerCase() ==
+        conjugation['root'].toLowerCase()) {
+      continue;
+    }
+
+    // Add separators starting from first element
+    if (result.isNotEmpty) {
+      result.add(SpecialString(text: short ? ';' : '\n'));
+    }
+
+    switch (type) {
+      case 'n':
+        result += nounConjugation(conjugation: conjugation, short: short);
+        break;
+      case 'v':
+        result += verbConjugation(conjugation: conjugation, short: short);
+        break;
+      case 'adj':
+        result += adjectiveConjugation(conjugation: conjugation, short: short);
+        break;
+      case 'v_to_n':
+        result += verbToNounConjugation(conjugation: conjugation, short: short);
+        break;
+      default:
+        throw ArgumentError;
+    }
+  }
+
+  return result;
+}
+
+List<SpecialString> nounConjugation({var conjugation, bool short = false}) {
+  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+
+  for (int i = 0; i <= 2; i++) {
+    if (conjugation['affixes'][i].toString().isNotEmpty) {
+      result.add(SpecialString(text: '${conjugation['affixes'][i]} + '));
+    }
+  }
+
+  result.add(SpecialString(text: conjugation['root']));
+
+  for (int i = 3; i <= 6; i++) {
+    if (conjugation['affixes'][i]) {
+      result.add(SpecialString(text: ' + ${conjugation['affixes'][i]}'));
+    }
+  }
+
+  if (!short) {
+    result
+      ..add(SpecialString(text: " = "))
+      ..add(SpecialString(text: conjugation['result'], bold: true));
+  }
+
+  return result;
+}
+
+List<SpecialString> verbConjugation({var conjugation, bool short = false}) {
+  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+  result.add(SpecialString(text: conjugation['root']));
+
+  for (int i = 0; i <= 3; i++) {
+    if (conjugation['infixes'][i].toString().isNotEmpty) {
+      result.add(SpecialString(text: ' + <${conjugation['infixes'][i]}>'));
+    }
+  }
+
+  if (!short) {
+    result
+      ..add(SpecialString(text: " = "))
+      ..add(SpecialString(text: conjugation['result'], bold: true));
+  }
+
+  return result;
+}
+
+List<SpecialString> adjectiveConjugation(
+    {var conjugation, bool short = false}) {
+  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+
+  if (conjugation['form'] == 'postnoun') {
+    result.add(SpecialString(text: "a + "));
+  }
+
+  result.add(SpecialString(text: conjugation['root']));
+
+  if (conjugation['form'] == 'prenoun') {
+    result.add(SpecialString(text: " + a"));
+  }
+
+  if (!short) {
+    result
+      ..add(SpecialString(text: " = "))
+      ..add(SpecialString(text: conjugation['result'], bold: true));
+  }
+
+  return result;
+}
+
+SpecialString getTranslation(Map<String, String> translations,
+    {String language = 'en'}) {
+  if (translations.isNotEmpty) {
+    return SpecialString(
+        // The bang operator use here is kinda nasty ngl
+        text: translations.containsKey(language)
+            ? translations[language]!
+            : translations.containsKey('en')
+                ? translations['en']!
+                : 'Missing translation');
+  } else {
+    return SpecialString(text: 'Missing translation');
+  }
+}
+
+List<SpecialString> verbToNounConjugation(
+    {var conjugation, bool short = false}) {
+  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+
+  result
+    ..add(SpecialString(text: conjugation['root']))
+    ..add(SpecialString(text: ' + ${conjugation['affixes'][0]}'));
+
+  if (!short) {
+    result
+      ..add(SpecialString(text: " = "))
+      ..add(SpecialString(text: conjugation['result'], bold: true));
+  }
+
+  return result;
+}
+
+List<SpecialString>? affixesSection(List<dynamic> affixes) {
+  List<SpecialString>? result = [];
+  for (var affixParent in affixes) {
+    final affix = affixParent['affix'];
+    result
+      ..add(SpecialString(
+          text: lemmaForm(affix['na\'vi'], affix['type']), bold: true))
+      ..add(getTranslation(affix['translations'][0]));
+  }
+  return result;
+}
+
 class QueryResult {
   final SpecialString navi;
   final SpecialString type;
   final List<SpecialString> pronunciation;
   final SpecialString? infixes;
   final SpecialString? status;
-  final SpecialString? conjugation;
+  final List<SpecialString>? conjugation;
+  final SpecialString translation;
+  final SpecialString? meaningNote;
+  final List<SpecialString>? affixes;
 
   QueryResult({
     required this.navi,
     required this.type,
     required this.pronunciation,
+    required this.translation,
     this.infixes,
     this.status,
     this.conjugation,
+    this.meaningNote,
+    this.affixes,
   });
 }
 
