@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:reykunyapp/nouns.dart' as nouns;
 
 Future<List<QueryResult>> getQueryResults(String query, String language) async {
   http.Response response = await http.get(
@@ -242,21 +243,6 @@ List<SpecialString> adjectiveConjugation(
   return result;
 }
 
-SpecialString getTranslation(Map<String, String> translations,
-    {String language = 'en'}) {
-  if (translations.isNotEmpty) {
-    return SpecialString(
-        // The bang operator use here is kinda nasty ngl
-        text: translations.containsKey(language)
-            ? translations[language]!
-            : translations.containsKey('en')
-                ? translations['en']!
-                : 'Missing translation');
-  } else {
-    return SpecialString(text: 'Missing translation');
-  }
-}
-
 List<SpecialString> verbToNounConjugation(
     {var conjugation, bool short = false}) {
   List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
@@ -274,6 +260,21 @@ List<SpecialString> verbToNounConjugation(
   return result;
 }
 
+SpecialString getTranslation(Map<String, String> translations,
+    {String language = 'en'}) {
+  if (translations.isNotEmpty) {
+    return SpecialString(
+        // The bang operator use here is kinda nasty ngl
+        text: translations.containsKey(language)
+            ? translations[language]!
+            : translations.containsKey('en')
+                ? translations['en']!
+                : 'Missing translation');
+  } else {
+    return SpecialString(text: 'Missing translation');
+  }
+}
+
 List<SpecialString>? affixesSection(List<dynamic> affixes) {
   List<SpecialString>? result = [];
   for (var affixParent in affixes) {
@@ -284,6 +285,47 @@ List<SpecialString>? affixesSection(List<dynamic> affixes) {
       ..add(getTranslation(affix['translations'][0]));
   }
   return result;
+}
+
+List<SpecialString>? nounConjugationSection(List<dynamic> conjugation) {
+  List<SpecialString> result;
+
+  for (int i = 1; i < 4; i++) {
+    if (conjugation[i].isEmpty) {}
+  }
+}
+
+List<List<SpecialString>>? createNounConjugation(
+    String word, String type, bool uncountable) {
+  List<List<SpecialString>> conjugation = [];
+  List<Function> caseFunctions = [
+    nouns.subjective,
+    nouns.agentive,
+    nouns.patientive,
+    nouns.dative,
+    nouns.genitive,
+    nouns.topical
+  ];
+  List<String> plurals = [
+    nouns.singular(word),
+    nouns.dual(word),
+    nouns.trial(word),
+    nouns.plural(word)
+  ];
+
+  for (int i = 0; i < 4; i++) {
+    List<String> row = [];
+    if (!uncountable || i == 0) {
+      for (int j = 0; j < 6; j++) {
+        row.add(caseFunctions[i](plurals[j]));
+      }
+    }
+    conjugation.add(row
+        .map((String conjugatedNoun) => SpecialString(text: conjugatedNoun))
+        .toList());
+  }
+
+  return conjugation;
 }
 
 class QueryResult {
