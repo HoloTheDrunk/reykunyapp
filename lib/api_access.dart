@@ -50,6 +50,18 @@ List<QueryResult> singleWordQueryResult(
         translation: getTranslation(res['translations'][0], language: language),
         meaningNote: res['meaning_note'],
         affixes: affixesSection(res['affixes']),
+        declensions: res.containsKey('conjugation')
+            ? res['conjugation']['forms'].map(
+                (List<String> l) => l.map((String s) => SpecialString(text: s)),
+              )
+            : {
+                if (res['type'] == 'n')
+                  createNounDeclensions(res['na\'vi'], false)
+                else if (res['type'] == 'n:pr')
+                  createNounDeclensions(res['na\'vi'], true)
+                else
+                  null
+              },
       ),
     );
   }
@@ -287,17 +299,23 @@ List<SpecialString>? affixesSection(List<dynamic> affixes) {
   return result;
 }
 
-List<SpecialString>? nounConjugationSection(List<dynamic> conjugation) {
-  List<SpecialString> result;
+//! Unneeded
+// List<List<SpecialString>>? nounConjugationSection(
+//     List<List<String>> conjugation) {
+//   List<List<SpecialString>> result;
 
-  for (int i = 1; i < 4; i++) {
-    if (conjugation[i].isEmpty) {}
-  }
-}
+//   for (int i = 1; i < 4; i++) {
+//     if (conjugation[i].isEmpty) {
+//       continue;
+//     }
 
-List<List<SpecialString>>? createNounConjugation(
-    String word, String type, bool uncountable) {
-  List<List<SpecialString>> conjugation = [];
+//     String c = conjugation[i][0];
+//     String formatted = nounConjugationString(c);
+//   }
+// }
+
+List<List<String>> createNounDeclensions(String word, bool uncountable) {
+  List<List<String>> declensions = [];
   List<Function> caseFunctions = [
     nouns.subjective,
     nouns.agentive,
@@ -320,26 +338,25 @@ List<List<SpecialString>>? createNounConjugation(
         row.add(caseFunctions[i](plurals[j]));
       }
     }
-    conjugation.add(row
-        .map((String conjugatedNoun) => SpecialString(text: conjugatedNoun))
-        .toList());
+    declensions.add(row);
   }
 
-  return conjugation;
+  return declensions;
 }
 
 class QueryResult {
   final SpecialString navi;
   final SpecialString type;
   final List<SpecialString> pronunciation;
+  final SpecialString translation;
   final SpecialString? infixes;
   final SpecialString? status;
   final List<SpecialString>? conjugation;
-  final SpecialString translation;
   final SpecialString? meaningNote;
   final List<SpecialString>? affixes;
+  final List<List<SpecialString>>? declensions;
 
-  QueryResult({
+  const QueryResult({
     required this.navi,
     required this.type,
     required this.pronunciation,
@@ -349,6 +366,7 @@ class QueryResult {
     this.conjugation,
     this.meaningNote,
     this.affixes,
+    this.declensions,
   });
 }
 
