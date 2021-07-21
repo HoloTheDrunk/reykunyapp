@@ -211,15 +211,23 @@ class QueryResultCard extends StatelessWidget {
             ),
             if (queryResult.affixes?.isNotEmpty ?? false)
               Text("Affixes: ", style: Theme.of(context).textTheme.headline6),
-            for (int i = 0; i < (queryResult.affixes?.length ?? 0); i += 2)
-              Text(
-                '${queryResult.affixes![i].text}: ${queryResult.affixes![i + 1].text}',
-                style: Theme.of(context).textTheme.bodyText1,
+            Padding(
+              padding: EdgeInsets.only(left: 8.0),
+              child: Column(
+                children: [
+                  for (int i = 0;
+                      i < (queryResult.affixes?.length ?? 0);
+                      i += 2)
+                    Text(
+                      '${queryResult.affixes![i].text}: ${queryResult.affixes![i + 1].text}',
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ),
+                ],
               ),
+            ),
             if (queryResult.declensions != null)
               Table(
                 defaultColumnWidth: FlexColumnWidth(),
-                columnWidths: {0: FractionColumnWidth(.15)},
                 children: [
                   TableRow(
                     children: [
@@ -259,7 +267,6 @@ class QueryResultCard extends StatelessWidget {
                             j++)
                           // Text("lmao", style: TextStyle(color: randomColor())),
                           RichText(
-                            textScaleFactor: 0.8,
                             text: parseDeclension(
                                 queryResult.declensions![j][i].text),
                           )
