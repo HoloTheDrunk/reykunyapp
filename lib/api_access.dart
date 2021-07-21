@@ -19,7 +19,7 @@ Future<List<QueryResult>> getQueryResults(
   } else if (data.length == 1) {
     return singleWordQueryResult(data[0]['sì\'eyng'], data[0]['aysämok']);
   } else {
-    print("Unimplemented");
+    throw UnimplementedError;
     return [];
     // return multiWordQueryResult(data, query);
   }
@@ -41,8 +41,6 @@ List<QueryResult> singleWordQueryResult(
         res.containsKey('conjugation') ? res['conjugation']['forms'] : null;
     List<List<SpecialString>>? declensions = [];
 
-    print('${rawDeclensions.runtimeType} => ${declensions.runtimeType}');
-
     if (rawDeclensions != null) {
       for (var l in rawDeclensions) {
         List<SpecialString> row = [];
@@ -59,12 +57,10 @@ List<QueryResult> singleWordQueryResult(
       declensions = null;
     }
 
-    // print(res['conjugation']['forms']);
-    print(declensions);
-
     queryResults.add(
       QueryResult(
-        navi: SpecialString(text: lemmaForm(res['na\'vi'], res['type'])),
+        navi: SpecialString(
+            text: lemmaForm(res['na\'vi'], res['type']), bold: true),
         type: SpecialString(text: toReadableType(res['type'])),
         pronunciation:
             pronunciationToSpecialStrings(res['pronunciation'], res['type']),
