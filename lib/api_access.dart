@@ -78,8 +78,12 @@ List<QueryResult> singleWordQueryResult(
         conjugation: res.containsKey('conjugated')
             ? conjugation(conjugated: res['conjugated'], short: false)
             : null,
-        translation: getTranslation(res['translations'][0], language: language),
-        meaningNote: SpecialString(text: res['meaning_note']),
+        translation: res.containsKey('translations')
+            ? getTranslation(res['translations'][0], language: language)
+            : SpecialString(text: "Missing translation section"),
+        meaningNote: res.containsKey('meaning_note')
+            ? SpecialString(text: res['meaning_note'])
+            : null,
         affixes:
             res.containsKey('affixes') ? affixesSection(res['affixes']) : null,
         declensions: declensions,
@@ -220,7 +224,7 @@ List<SpecialString> nounConjugation({var conjugation, bool short = false}) {
   result.add(SpecialString(text: conjugation['root']));
 
   for (int i = 3; i <= 6; i++) {
-    if (conjugation['affixes'][i]) {
+    if (conjugation['affixes'][i].toString().isNotEmpty) {
       result.add(SpecialString(text: ' + ${conjugation['affixes'][i]}'));
     }
   }
