@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:reykunyapp/api_access.dart';
 
 void main() {
   runApp(MyApp());
@@ -9,23 +12,23 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Reykunyapp',
-      home: MyHomePage(title: 'Reykunyapp'),
+      home: HomePage(title: 'Reykunyapp'),
       theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
@@ -36,6 +39,15 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  List<QueryResult> queryResults = [];
+  Random rand = Random();
+
+  Future<List<QueryResult>> getFutureQueryResults(String query) {
+    Future<List<QueryResult>> futureQueryResults =
+        getQueryResults(query: query, language: 'en');
+    return futureQueryResults;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,16 +56,34 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Column(
         children: [
-          SearchBar(),
-          Container(
-            height: 512,
-            child: ListView.separated(
-              itemBuilder: (_, index) => Center(child: Text("$index")),
-              separatorBuilder: (_, __) => Divider(
-                indent: 10,
-                endIndent: 10,
-              ),
-              itemCount: 100,
+          SearchBar(
+            callback: (String query) {
+              Future<List<QueryResult>> futureQueryResults =
+                  getFutureQueryResults(query);
+              futureQueryResults.then(
+                (value) {
+                  setState(() {
+                    queryResults = value;
+                  });
+                },
+              );
+            },
+          ),
+          Expanded(
+            child: ListView(
+              children: [
+                for (int i = 0; i < 2 * queryResults.length - 1; i++)
+                  if (i % 2 == 0)
+                    QueryResultCard(
+                      queryResult: queryResults[i ~/ 2],
+                    )
+                  else
+                    Divider(
+                      indent: 10,
+                      endIndent: 10,
+                    )
+                // SearchResultRaw(json: queryResults[i].navi.text),
+              ],
             ),
           ),
         ],
@@ -63,8 +93,11 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class SearchBar extends StatefulWidget {
+  final Function callback;
+
   const SearchBar({
     Key? key,
+    required this.callback,
   }) : super(key: key);
 
   @override
@@ -72,16 +105,30 @@ class SearchBar extends StatefulWidget {
 }
 
 class _SearchBarState extends State<SearchBar> {
+  final TextEditingController searchBarController = TextEditingController();
+
+  @override
+  void dispose() {
+    searchBarController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
+        controller: searchBarController,
+        onSubmitted: (_) {
+          widget.callback(searchBarController.text);
+        },
         decoration: InputDecoration(
           hintText: "Enter a query",
           suffixIcon: IconButton(
             icon: Icon(Icons.search),
-            onPressed: () {},
+            onPressed: () {
+              widget.callback(searchBarController.text);
+            },
           ),
         ),
       ),
@@ -89,37 +136,24 @@ class _SearchBarState extends State<SearchBar> {
   }
 }
 
-class SearchResult extends StatelessWidget {
-  final String name;
-  const SearchResult({
-    required this.name,
+class QueryResultCard extends StatelessWidget {
+  final QueryResult queryResult;
+  const QueryResultCard({
+    required this.queryResult,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container();
-  }
-}
-
-class SearchResultRaw extends StatelessWidget {
-  final String json;
-  const SearchResultRaw({
-    required this.json,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(json * 42),
-        ),
+    return Container(
+      child: Column(
+        children: [
+          Text(queryResult.navi.text),
+          Text(queryResult.translation.text),
+          for (int i = 0; i < (queryResult.affixes?.length ?? 0); i += 2)
+            Text(
+                '${queryResult.affixes![i].text}: ${queryResult.affixes![i + 1].text}'),
+        ],
       ),
     );
   }
