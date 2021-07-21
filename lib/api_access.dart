@@ -2,10 +2,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:reykunyapp/nouns.dart' as nouns;
 
-Future<List<QueryResult>> getQueryResults(String query, String language) async {
+Future<List<QueryResult>> getQueryResults(
+    {required String query, required String language}) async {
   http.Response response = await http.get(
     Uri.parse('https://reykunyu.wimiso.nl/api/fwew?tìpawm=$query'),
   );
+
+  if (response.contentLength == 0) {
+    return [];
+  }
 
   final data = jsonDecode(response.body);
 
@@ -15,12 +20,13 @@ Future<List<QueryResult>> getQueryResults(String query, String language) async {
     return singleWordQueryResult(data[0]['sì\'eyng'], data[0]['aysämok']);
   } else {
     print("Unimplemented");
-    return multiWordQueryResult(data, query);
+    return [];
+    // return multiWordQueryResult(data, query);
   }
 }
 
 List<QueryResult> singleWordQueryResult(
-    List<dynamic> result, List<String> suggestions,
+    List<dynamic> result, List<dynamic> suggestions,
     {String language = 'en'}) {
   if (result.length == 0) {
     return [];
@@ -30,6 +36,31 @@ List<QueryResult> singleWordQueryResult(
 
   for (int i = 0; i < result.length; i++) {
     var res = result[i];
+
+    final rawDeclensions =
+        res.containsKey('conjugation') ? res['conjugation']['forms'] : null;
+    List<List<SpecialString>>? declensions = [];
+
+    print('${rawDeclensions.runtimeType} => ${declensions.runtimeType}');
+
+    if (rawDeclensions != null) {
+      for (var l in rawDeclensions) {
+        List<SpecialString> row = [];
+        for (var s in l) {
+          row.add(SpecialString(text: s.toString()));
+        }
+        declensions.add(row);
+      }
+    } else if (res['type'] == 'n') {
+      declensions = createNounDeclensions(res['na\'vi'], false);
+    } else if (res['type'] == 'n:pr') {
+      declensions = createNounDeclensions(res['na\'vi'], true);
+    } else {
+      declensions = null;
+    }
+
+    // print(res['conjugation']['forms']);
+    print(declensions);
 
     queryResults.add(
       QueryResult(
@@ -48,20 +79,10 @@ List<QueryResult> singleWordQueryResult(
             ? conjugation(conjugated: res['conjugated'], short: false)
             : null,
         translation: getTranslation(res['translations'][0], language: language),
-        meaningNote: res['meaning_note'],
-        affixes: affixesSection(res['affixes']),
-        declensions: res.containsKey('conjugation')
-            ? res['conjugation']['forms'].map(
-                (List<String> l) => l.map((String s) => SpecialString(text: s)),
-              )
-            : {
-                if (res['type'] == 'n')
-                  createNounDeclensions(res['na\'vi'], false)
-                else if (res['type'] == 'n:pr')
-                  createNounDeclensions(res['na\'vi'], true)
-                else
-                  null
-              },
+        meaningNote: SpecialString(text: res['meaning_note']),
+        affixes:
+            res.containsKey('affixes') ? affixesSection(res['affixes']) : null,
+        declensions: declensions,
       ),
     );
   }
@@ -272,15 +293,15 @@ List<SpecialString> verbToNounConjugation(
   return result;
 }
 
-SpecialString getTranslation(Map<String, String> translations,
+SpecialString getTranslation(Map<String, dynamic> translations,
     {String language = 'en'}) {
   if (translations.isNotEmpty) {
     return SpecialString(
         // The bang operator use here is kinda nasty ngl
         text: translations.containsKey(language)
-            ? translations[language]!
+            ? translations[language]!.toString()
             : translations.containsKey('en')
-                ? translations['en']!
+                ? translations['en']!.toString()
                 : 'Missing translation');
   } else {
     return SpecialString(text: 'Missing translation');
@@ -314,8 +335,8 @@ List<SpecialString>? affixesSection(List<dynamic> affixes) {
 //   }
 // }
 
-List<List<String>> createNounDeclensions(String word, bool uncountable) {
-  List<List<String>> declensions = [];
+List<List<SpecialString>> createNounDeclensions(String word, bool uncountable) {
+  List<List<SpecialString>> declensions = [];
   List<Function> caseFunctions = [
     nouns.subjective,
     nouns.agentive,
@@ -335,10 +356,10 @@ List<List<String>> createNounDeclensions(String word, bool uncountable) {
     List<String> row = [];
     if (!uncountable || i == 0) {
       for (int j = 0; j < 6; j++) {
-        row.add(caseFunctions[i](plurals[j]));
+        row.add(caseFunctions[j](plurals[i]));
       }
     }
-    declensions.add(row);
+    declensions.add(row.map((String s) => SpecialString(text: s)).toList());
   }
 
   return declensions;

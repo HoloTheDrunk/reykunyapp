@@ -1,3 +1,5 @@
+import 'dart:math' as Math;
+
 //=== Ending
 
 bool endsInVowel(String noun) {
@@ -42,8 +44,8 @@ String patientive(String noun) {
     if (endsInConsonant(noun)) {
       return noun + "-it/ti";
     } else {
-      if (noun.substring(-1) == "y") {
-        if (noun.substring(-2) == "ey") {
+      if (noun.substring(noun.length - 1) == "y") {
+        if (noun.substring(noun.length - 2) == "ey") {
           return noun + "-t(i)";
         } else {
           return noun + "-it/t(i)";
@@ -60,13 +62,13 @@ String dative(String noun) {
     return noun + "-r(u)";
   } else {
     if (endsInConsonant(noun)) {
-      if (noun.substring(-1) == "'") {
+      if (noun.substring(noun.length - 1) == "'") {
         return noun + "-ur/ru";
       }
       return noun + "-ur";
     } else {
-      if (noun.substring(-1) == "w") {
-        if (noun.substring(-2) == "ew") {
+      if (noun.substring(noun.length - 1) == "w") {
+        if (noun.substring(noun.length - 2) == "ew") {
           return noun + "-r(u)";
         } else {
           return noun + "-ur/r(u)";
@@ -80,13 +82,15 @@ String dative(String noun) {
 
 String genitive(String noun) {
   if (endsInVowel(noun)) {
-    if (noun.substring(-1) == "o" || noun.substring(-1) == "u") {
+    if (noun.substring(noun.length - 1) == "o" ||
+        noun.substring(noun.length - 1) == "u") {
       return noun + "-ä";
     } else {
-      if (noun.substring(-2) == "ia") {
+      if (noun.substring(noun.length - 2) == "ia") {
         return noun.substring(0, -1) + "-ä";
       } else {
-        if (noun.toLowerCase().substring(-9) == "omatikaya") {
+        if (noun.toLowerCase().substring(Math.max(0, noun.length - 9)) ==
+            "omatikaya") {
           return noun + "-ä";
         } else {
           return noun + "-yä";
