@@ -3,25 +3,34 @@ import 'package:http/http.dart' as http;
 import 'package:reykunyapp/nouns.dart' as nouns;
 
 Future<List<QueryResult>> getQueryResults(
-    {required String query, required String language}) async {
-  http.Response response = await http.get(
-    Uri.parse('https://reykunyu.wimiso.nl/api/fwew?tìpawm=$query'),
-  );
+    {required String query,
+    required String language,
+    required bool reversed}) async {
+  http.Response response;
+  if (!reversed) {
+    response = await http.get(
+      Uri.parse('https://reykunyu.wimiso.nl/api/fwew?tìpawm=$query'),
+    );
+  } else {
+    response = await http.get(
+      Uri.parse(
+          'https://reykunyu.wimiso.nl/api/search?language=$language&query=$query'),
+    );
+  }
 
   if (response.contentLength == 0) {
     return [];
   }
+  print(response.body);
 
   final data = jsonDecode(response.body);
 
   if (data.length == 0) {
-    throw NullThrownError;
+    return [];
   } else if (data.length == 1) {
     return singleWordQueryResult(data[0]['sì\'eyng'], data[0]['aysämok']);
   } else {
-    throw UnimplementedError;
-    return [];
-    // return multiWordQueryResult(data, query);
+    return singleWordQueryResult(data, []);
   }
 }
 
@@ -62,8 +71,9 @@ List<QueryResult> singleWordQueryResult(
         navi: SpecialString(
             text: lemmaForm(res['na\'vi'], res['type']), bold: true),
         type: SpecialString(text: toReadableType(res['type'])),
-        pronunciation:
-            pronunciationToSpecialStrings(res['pronunciation'], res['type']),
+        pronunciation: res.containsKey('pronunciation')
+            ? pronunciationToSpecialStrings(res['pronunciation'], res['type'])
+            : [SpecialString(text: "Unknown stress pattern")],
         infixes: res.containsKey('infixes')
             ? SpecialString(
                 text: res['infixes'].toString().replaceAll('.', '·'))
@@ -88,10 +98,6 @@ List<QueryResult> singleWordQueryResult(
   }
 
   return queryResults;
-}
-
-List<QueryResult> multiWordQueryResult(List<dynamic> result, String query) {
-  throw UnimplementedError;
 }
 
 String lemmaForm(String word, String type) {
@@ -320,21 +326,6 @@ List<SpecialString>? affixesSection(List<dynamic> affixes) {
   return result;
 }
 
-//! Unneeded
-// List<List<SpecialString>>? nounConjugationSection(
-//     List<List<String>> conjugation) {
-//   List<List<SpecialString>> result;
-
-//   for (int i = 1; i < 4; i++) {
-//     if (conjugation[i].isEmpty) {
-//       continue;
-//     }
-
-//     String c = conjugation[i][0];
-//     String formatted = nounConjugationString(c);
-//   }
-// }
-
 List<List<SpecialString>> createNounDeclensions(String word, bool uncountable) {
   List<List<SpecialString>> declensions = [];
   List<Function> caseFunctions = [
@@ -362,6 +353,15 @@ List<List<SpecialString>> createNounDeclensions(String word, bool uncountable) {
     declensions.add(row.map((String s) => SpecialString(text: s)).toList());
   }
 
+  declensions =
+      declensions.where((List<SpecialString> lss) => lss.isNotEmpty).toList();
+  declensions += List<List<SpecialString>>.generate(
+    4 - declensions.length,
+    (__) => List<SpecialString>.generate(
+      6,
+      (_) => SpecialString(text: '-x-'),
+    ),
+  );
   return declensions;
 }
 
@@ -392,7 +392,7 @@ class QueryResult {
 }
 
 class SpecialString {
-  String text;
+  final String text;
   final bool bold;
   final bool italic;
   final bool underlined;
