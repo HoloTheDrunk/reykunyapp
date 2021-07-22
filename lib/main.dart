@@ -43,19 +43,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<QueryResult> queryResults = [];
-  Random rand = Random();
+  bool reverseSearching = false;
 
   Future<List<QueryResult>> getFutureQueryResults(String query) {
-    Future<List<QueryResult>> futureQueryResults =
-        getQueryResults(query: query, language: 'en');
+    Future<List<QueryResult>> futureQueryResults = getQueryResults(
+        query: query, language: 'en', reversed: reverseSearching);
     return futureQueryResults;
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<String> languages = <String>['Na\'vi', 'English', 'Fançais'];
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(
+                () {
+                  reverseSearching = !reverseSearching;
+                },
+              );
+            },
+            icon: Icon(
+              Icons.flip,
+              color: reverseSearching
+                  ? Theme.of(context).accentColor
+                  : Theme.of(context).disabledColor,
+            ),
+            tooltip: "Toggle reverse search",
+            enableFeedback: true,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -150,6 +170,10 @@ class QueryResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TextSpan pronunciation = TextSpan(children: []);
+
+    print(queryResult.pronunciation.map((SpecialString ss) {
+      return ss.text;
+    }).toList());
     for (int i = 0; i < queryResult.pronunciation.length; i++) {
       pronunciation.children?.add(
         TextSpan(
@@ -161,123 +185,132 @@ class QueryResultCard extends StatelessWidget {
         ),
       );
     }
-    return Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
-      child: Container(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text.rich(
-              TextSpan(
-                text: queryResult.navi.text + ' ',
-                style: Theme.of(context).textTheme.headline4,
-                children: [
-                  TextSpan(
-                    text: queryResult.type.text,
-                    style: Theme.of(context).textTheme.headline6,
-                  )
-                ],
-              ),
-            ),
-            Text.rich(
-              pronunciation,
-            ),
-            LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                return Divider(
-                  endIndent: constraints.maxWidth * 0.9,
-                );
-              },
-            ),
-            Text.rich(
-              TextSpan(
-                text: queryResult.translation.text,
-                style: Theme.of(context).textTheme.headline5,
-              ),
-            ),
-            if (queryResult.meaningNote != null)
+
+    print('coucou');
+    try {
+      return Padding(
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
+        child: Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text.rich(
                 TextSpan(
-                  text: queryResult.meaningNote?.text,
-                  style: Theme.of(context).textTheme.bodyText1,
+                  text: queryResult.navi.text + ' ',
+                  style: Theme.of(context).textTheme.headline4,
+                  children: [
+                    TextSpan(
+                      text: queryResult.type.text,
+                      style: Theme.of(context).textTheme.headline6,
+                    )
+                  ],
                 ),
               ),
-            LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                return Divider(
-                  endIndent: constraints.maxWidth * 0.9,
-                );
-              },
-            ),
-            if (queryResult.affixes?.isNotEmpty ?? false)
-              Text("Affixes: ", style: Theme.of(context).textTheme.headline6),
-            Padding(
-              padding: EdgeInsets.only(left: 8.0),
-              child: Column(
-                children: [
-                  for (int i = 0;
-                      i < (queryResult.affixes?.length ?? 0);
-                      i += 2)
-                    Text(
-                      '${queryResult.affixes![i].text}: ${queryResult.affixes![i + 1].text}',
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ),
-                ],
+              Text.rich(
+                pronunciation,
               ),
-            ),
-            if (queryResult.declensions != null)
-              Table(
-                defaultColumnWidth: FlexColumnWidth(),
-                children: [
-                  TableRow(
-                    children: [
-                      Container(),
-                      for (String plurality in [
-                        'singular',
-                        'dual',
-                        'trial',
-                        'plural'
-                      ])
-                        Text(plurality,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14))
-                    ],
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  return Divider(
+                    endIndent: constraints.maxWidth * 0.9,
+                  );
+                },
+              ),
+              Text.rich(
+                TextSpan(
+                  text: queryResult.translation.text,
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+              ),
+              if (queryResult.meaningNote != null)
+                Text.rich(
+                  TextSpan(
+                    text: queryResult.meaningNote?.text,
+                    style: Theme.of(context).textTheme.bodyText1,
                   ),
-                  for (int i = 0; i < queryResult.declensions![0].length; i++)
+                ),
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  return Divider(
+                    endIndent: constraints.maxWidth * 0.9,
+                  );
+                },
+              ),
+              if (queryResult.affixes?.isNotEmpty ?? false)
+                Text("Affixes: ", style: Theme.of(context).textTheme.headline6),
+              Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Column(
+                  children: [
+                    for (int i = 0;
+                        i < (queryResult.affixes?.length ?? 0);
+                        i += 2)
+                      Text(
+                        '${queryResult.affixes![i].text}: ${queryResult.affixes![i + 1].text}',
+                        style: Theme.of(context).textTheme.bodyText1,
+                      ),
+                  ],
+                ),
+              ),
+              if (queryResult.declensions != null &&
+                  queryResult.declensions!.isNotEmpty)
+                Table(
+                  defaultColumnWidth: FlexColumnWidth(),
+                  children: [
                     TableRow(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: Text(
-                            [
-                              'subjective',
-                              'agentive',
-                              'patientive',
-                              'dative',
-                              'genitive',
-                              'topical'
-                            ][i],
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        for (int j = 0;
-                            j < (queryResult.declensions?.length ?? 0);
-                            j++)
-                          // Text("lmao", style: TextStyle(color: randomColor())),
-                          RichText(
-                            text: parseDeclension(
-                                queryResult.declensions![j][i].text),
-                          )
+                        Container(),
+                        for (String plurality in [
+                          'singular',
+                          'dual',
+                          'trial',
+                          'plural'
+                        ])
+                          Text(plurality,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14))
                       ],
                     ),
-                ],
-              ),
-          ],
+                    for (int i = 0; i < queryResult.declensions![0].length; i++)
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Text(
+                              [
+                                'subjective',
+                                'agentive',
+                                'patientive',
+                                'dative',
+                                'genitive',
+                                'topical'
+                              ][i],
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          for (int j = 0;
+                              j < (queryResult.declensions?.length ?? 0);
+                              j++)
+                            // Text("lmao", style: TextStyle(color: randomColor())),
+                            RichText(
+                              text: parseDeclension(
+                                queryResult.declensions![j][i].text,
+                              ),
+                            )
+                        ],
+                      ),
+                  ],
+                ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      print('${queryResult.navi.text} is causing problems');
+      throw e;
+    }
   }
 }
 
