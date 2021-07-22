@@ -28,15 +28,14 @@ Future<List<QueryResult>> getQueryResults(
   if (data.length == 0) {
     return [];
   } else if (data.length == 1) {
-    return singleWordQueryResult(data[0]['sì\'eyng'], data[0]['aysämok']);
+    return singleWordQueryResult(data[0]['sì\'eyng'], language: language);
   } else {
-    return singleWordQueryResult(data, []);
+    return singleWordQueryResult(data, language: language);
   }
 }
 
-List<QueryResult> singleWordQueryResult(
-    List<dynamic> result, List<dynamic> suggestions,
-    {String language = 'en'}) {
+List<QueryResult> singleWordQueryResult(List<dynamic> result,
+    {List<dynamic>? suggestions, String language = 'en'}) {
   if (result.length == 0) {
     return [];
   }
@@ -90,8 +89,9 @@ List<QueryResult> singleWordQueryResult(
         meaningNote: res.containsKey('meaning_note')
             ? SpecialString(text: res['meaning_note'])
             : null,
-        affixes:
-            res.containsKey('affixes') ? affixesSection(res['affixes']) : null,
+        affixes: res.containsKey('affixes')
+            ? affixesSection(res['affixes'], language: language)
+            : null,
         declensions: declensions,
       ),
     );
@@ -300,28 +300,30 @@ List<SpecialString> verbToNounConjugation(
 }
 
 SpecialString getTranslation(Map<String, dynamic> translations,
-    {String language = 'en'}) {
+    {required String language}) {
   if (translations.isNotEmpty) {
+    print('$language => ${translations[language].toString()}');
     return SpecialString(
         // The bang operator use here is kinda nasty ngl
         text: translations.containsKey(language)
             ? translations[language]!.toString()
-            : translations.containsKey('en')
-                ? translations['en']!.toString()
-                : 'Missing translation');
+            // : translations.containsKey('en')
+            //     ? translations['en']!.toString()
+            : 'Missing translation');
   } else {
     return SpecialString(text: 'Missing translation');
   }
 }
 
-List<SpecialString>? affixesSection(List<dynamic> affixes) {
+List<SpecialString>? affixesSection(List<dynamic> affixes,
+    {required String language}) {
   List<SpecialString>? result = [];
   for (var affixParent in affixes) {
     final affix = affixParent['affix'];
     result
       ..add(SpecialString(
           text: lemmaForm(affix['na\'vi'], affix['type']), bold: true))
-      ..add(getTranslation(affix['translations'][0]));
+      ..add(getTranslation(affix['translations'][0], language: language));
   }
   return result;
 }

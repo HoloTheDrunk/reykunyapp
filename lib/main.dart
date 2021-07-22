@@ -48,19 +48,60 @@ class _HomePageState extends State<HomePage> {
   List<QueryResult> queryResults = [];
   bool reverseSearching = false;
 
+  final List<String> languages = <String>[
+    'English',
+    'Français',
+    'Deutsche',
+    'Nederlands',
+  ];
+  final Map<String, String> languageCodes = {
+    'English': 'en',
+    'Français': 'fr',
+    'Deutsche': 'de',
+    'Nederlands': 'nl',
+  };
+  String chosenLanguage = 'English';
+  String chosenLanguageCode = 'en';
+
   Future<List<QueryResult>> getFutureQueryResults(String query) {
+    print('getFutureQueryResults using language: $chosenLanguageCode');
     Future<List<QueryResult>> futureQueryResults = getQueryResults(
-        query: query, language: 'en', reversed: reverseSearching);
+        query: query, language: chosenLanguageCode, reversed: reverseSearching);
     return futureQueryResults;
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<String> languages = <String>['Na\'vi', 'English', 'Fançais'];
+    print(languageCodes.keys.toList());
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: DropdownButton(
+              hint: Text('Select language'),
+              value: chosenLanguage,
+              onChanged: (newLanguage) {
+                setState(() {
+                  chosenLanguage = newLanguage.toString();
+                  chosenLanguageCode = languageCodes[chosenLanguage] ?? 'en';
+                });
+              },
+              icon: Icon(Icons.translate),
+              items: languages
+                  .where(
+                      (String language) => languageCodes.containsKey(language))
+                  .map<DropdownMenuItem<String>>(
+                (String language) {
+                  return DropdownMenuItem(
+                    value: language,
+                    child: Text(language),
+                  );
+                },
+              ).toList(),
+            ),
+          ),
           IconButton(
             onPressed: () {
               setState(
@@ -174,9 +215,6 @@ class QueryResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     TextSpan pronunciation = TextSpan(children: []);
 
-    print(queryResult.pronunciation.map((SpecialString ss) {
-      return ss.text;
-    }).toList());
     for (int i = 0; i < queryResult.pronunciation.length; i++) {
       pronunciation.children?.add(
         TextSpan(
@@ -189,7 +227,6 @@ class QueryResultCard extends StatelessWidget {
       );
     }
 
-    print('coucou');
     try {
       return Padding(
         padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
