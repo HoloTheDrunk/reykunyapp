@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:reykunyapp/api_access.dart';
@@ -12,7 +13,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Reykunyapp',
-      home: HomePage(title: 'Reykunyapp'),
+      home: HomePage(
+        title: 'Reykunyapp',
+      ),
       theme: ThemeData(
         brightness: Brightness.dark,
         textTheme: TextTheme(),
@@ -293,12 +296,12 @@ class QueryResultCard extends StatelessWidget {
                           for (int j = 0;
                               j < (queryResult.declensions?.length ?? 0);
                               j++)
-                            // Text("lmao", style: TextStyle(color: randomColor())),
                             RichText(
                               text: parseDeclension(
+                                // TextSpan(
                                 queryResult.declensions![j][i].text,
                               ),
-                            )
+                            ),
                         ],
                       ),
                   ],
@@ -317,10 +320,11 @@ class QueryResultCard extends StatelessWidget {
 TextSpan parseDeclension(String declension) {
   TextSpan output = TextSpan(children: []);
 
-  RegExp matchPrefix = RegExp(r'\(?([a-zìäé]*)-\)?');
-  RegExp matchLenition = RegExp(r'(?<=\{)(.*)(?=\})');
-  RegExp matchRoot = RegExp(r'(?<=[^a-zìäé])([a-zìäé]*)(?=\-)');
-  RegExp matchSuffix = RegExp(r'-[a-zìäé]*');
+  RegExp matchPrefix = RegExp(r'\(?([a-zìäé ]*)-\)?', caseSensitive: false);
+  RegExp matchLenition = RegExp(r'(?<=\{)(.*)(?=\})', caseSensitive: false);
+  RegExp matchRoot =
+      RegExp(r'(?<=[^a-zìäé])([a-zìäé ]*)(?=\-)', caseSensitive: false);
+  RegExp matchSuffix = RegExp(r'-[a-zìäé ]*', caseSensitive: false);
 
   String? prefix = matchPrefix.firstMatch(declension)?.group(0) ?? "";
   String? lenition = matchLenition.firstMatch(declension)?.group(0) ?? "";
