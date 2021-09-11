@@ -304,11 +304,13 @@ class QueryResultCard extends StatelessWidget {
                           'singular',
                           'dual',
                           'trial',
-                          'plural'
+                          'plural',
                         ])
-                          Text(plurality,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14))
+                          Text(
+                            plurality,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                          )
                       ],
                     ),
                     for (int i = 0; i < queryResult.declensions![0].length; i++)

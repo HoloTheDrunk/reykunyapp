@@ -244,7 +244,7 @@ List<SpecialString> verbConjugation({var conjugation, bool short = false}) {
   List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
   result.add(SpecialString(text: conjugation['root']));
 
-  for (int i = 0; i <= 3; i++) {
+  for (int i = 0; i < 3; i++) {
     if (conjugation['infixes'][i].toString().isNotEmpty) {
       result.add(SpecialString(text: ' + <${conjugation['infixes'][i]}>'));
     }
