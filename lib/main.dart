@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:reykunyapp/api_access.dart';
 
 void main() {
@@ -113,7 +114,7 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(
               Icons.flip,
               color: reverseSearching
-                  ? Theme.of(context).accentColor
+                  ? Theme.of(context).colorScheme.secondary
                   : Theme.of(context).disabledColor,
             ),
             tooltip: "Toggle reverse search",
@@ -294,57 +295,86 @@ class QueryResultCard extends StatelessWidget {
               ),
               if (queryResult.declensions != null &&
                   queryResult.declensions!.isNotEmpty)
-                Table(
-                  defaultColumnWidth: FlexColumnWidth(),
-                  children: [
-                    TableRow(
-                      children: [
-                        Container(),
-                        for (String plurality in [
-                          'singular',
-                          'dual',
-                          'trial',
-                          'plural',
-                        ])
-                          Text(
-                            plurality,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
-                          )
-                      ],
-                    ),
-                    for (int i = 0; i < queryResult.declensions![0].length; i++)
-                      TableRow(
+                SizedBox(
+                  height: 200.0,
+                  width: 200.0,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: true,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Text(
-                              [
-                                'subjective',
-                                'agentive',
-                                'patientive',
-                                'dative',
-                                'genitive',
-                                'topical'
-                              ][i],
+                          Text(" "),
+                          for (String plurality in [
+                            'singular',
+                            'dual',
+                            'trial',
+                            'plural',
+                          ])
+                            Text(
+                              plurality,
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          for (int j = 0;
-                              j < (queryResult.declensions?.length ?? 0);
-                              j++)
-                            RichText(
-                              text: parseDeclension(
-                                // TextSpan(
-                                queryResult.declensions![j][i].text,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
                             ),
                         ],
                       ),
-                  ],
+                    ],
+                  ),
                 ),
+              // Table(
+              //   defaultColumnWidth: FlexColumnWidth(),
+              //   children: [
+              //     TableRow(
+              //       children: [
+              //         Container(),
+              //         for (String plurality in [
+              //           'singular',
+              //           'dual',
+              //           'trial',
+              //           'plural',
+              //         ])
+              //           Text(
+              //             plurality,
+              //             style: TextStyle(
+              //                 fontWeight: FontWeight.bold, fontSize: 14),
+              //           )
+              //       ],
+              //     ),
+              //     for (int i = 0; i < queryResult.declensions![0].length; i++)
+              //       TableRow(
+              //         children: [
+              //           Padding(
+              //             padding: const EdgeInsets.only(right: 8.0),
+              //             child: Text(
+              //               [
+              //                 'subjective',
+              //                 'agentive',
+              //                 'patientive',
+              //                 'dative',
+              //                 'genitive',
+              //                 'topical'
+              //               ][i],
+              //               style: TextStyle(
+              //                   fontWeight: FontWeight.bold, fontSize: 14),
+              //               textAlign: TextAlign.right,
+              //             ),
+              //           ),
+              //           for (int j = 0;
+              //               j < (queryResult.declensions?.length ?? 0);
+              //               j++)
+              //             RichText(
+              //               text: parseDeclension(
+              //                 // TextSpan(
+              //                 queryResult.declensions![j][i].text,
+              //               ),
+              //             ),
+              //         ],
+              //       ),
+              //   ],
+              // ),
             ],
           ),
         ),
