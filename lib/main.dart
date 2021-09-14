@@ -306,14 +306,16 @@ class QueryResultCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(" "),
-                          for (String plurality in [
-                            'singular',
-                            'dual',
-                            'trial',
-                            'plural',
+                          for (String form in [
+                            'subjective',
+                            'agentive',
+                            'patientive',
+                            'dative',
+                            'genitive',
+                            'topical',
                           ])
                             Text(
-                              plurality,
+                              form,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -321,6 +323,18 @@ class QueryResultCard extends StatelessWidget {
                             ),
                         ],
                       ),
+                      //TODO fix broken column, look into declensions again
+                      for (int plurality = 0;
+                          plurality < queryResult.declensions!.length;
+                          plurality++) ...[
+                        Text(["singular, dual, trial, plural"][plurality]),
+                        for (int declension = 0;
+                            declension < queryResult.declensions![0].length;
+                            declension++)
+                          RichText(
+                              text: parseDeclension(queryResult
+                                  .declensions![declension][plurality].text))
+                      ]
                     ],
                   ),
                 ),
