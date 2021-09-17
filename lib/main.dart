@@ -219,11 +219,11 @@ class QueryResultCard extends StatelessWidget {
     for (int i = 0; i < queryResult.pronunciation.length; i++) {
       pronunciation.children?.add(
         TextSpan(
-          text: queryResult.pronunciation[i].text,
-          style: TextStyle(
-              decoration: queryResult.pronunciation[i].underlined
+          text: queryResult.pronunciation[i],
+/*           style: TextStyle(
+              decoration: queryResult.pronunciation[i]
                   ? TextDecoration.underline
-                  : TextDecoration.none),
+                  : TextDecoration.none), */
         ),
       );
     }
@@ -237,11 +237,11 @@ class QueryResultCard extends StatelessWidget {
             children: [
               Text.rich(
                 TextSpan(
-                  text: queryResult.navi.text + ' ',
+                  text: queryResult.navi + ' ',
                   style: Theme.of(context).textTheme.headline4,
                   children: [
                     TextSpan(
-                      text: queryResult.type.text,
+                      text: queryResult.type,
                       style: Theme.of(context).textTheme.headline6,
                     )
                   ],
@@ -259,14 +259,14 @@ class QueryResultCard extends StatelessWidget {
               ),
               Text.rich(
                 TextSpan(
-                  text: queryResult.translation.text,
+                  text: queryResult.translation,
                   style: Theme.of(context).textTheme.headline5,
                 ),
               ),
               if (queryResult.meaningNote != null)
                 Text.rich(
                   TextSpan(
-                    text: queryResult.meaningNote?.text,
+                    text: queryResult.meaningNote,
                     style: Theme.of(context).textTheme.bodyText1,
                   ),
                 ),
@@ -287,7 +287,7 @@ class QueryResultCard extends StatelessWidget {
                         i < (queryResult.affixes?.length ?? 0);
                         i += 2)
                       Text(
-                        '${queryResult.affixes![i].text}: ${queryResult.affixes![i + 1].text}',
+                        '${queryResult.affixes![i]}: ${queryResult.affixes![i + 1]}',
                         style: Theme.of(context).textTheme.bodyText1,
                       ),
                   ],
@@ -333,7 +333,7 @@ class QueryResultCard extends StatelessWidget {
                             declension++)
                           RichText(
                               text: parseDeclension(queryResult
-                                  .declensions![declension][plurality].text))
+                                  .declensions![declension][plurality]))
                       ]
                     ],
                   ),
@@ -394,7 +394,7 @@ class QueryResultCard extends StatelessWidget {
         ),
       );
     } catch (e) {
-      print('${queryResult.navi.text} is causing problems');
+      print('${queryResult.navi} is causing problems');
       throw e;
     }
   }
@@ -452,22 +452,4 @@ Color randomColor() {
   Random rand = Random();
   return Color.fromARGB(
       255, rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
-}
-
-class SpecialText extends StatelessWidget {
-  final SpecialString data;
-  const SpecialText({required this.data, Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      data.text,
-      style: TextStyle(
-        fontWeight: data.bold ? FontWeight.bold : FontWeight.normal,
-        fontStyle: data.italic ? FontStyle.italic : FontStyle.normal,
-        decoration:
-            data.underlined ? TextDecoration.underline : TextDecoration.none,
-      ),
-    );
-  }
 }
