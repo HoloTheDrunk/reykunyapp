@@ -47,13 +47,13 @@ List<QueryResult> singleWordQueryResult(List<dynamic> result,
 
     final rawDeclensions =
         res.containsKey('conjugation') ? res['conjugation']['forms'] : null;
-    List<List<SpecialString>>? declensions = [];
+    List<List<String>>? declensions = [];
 
     if (rawDeclensions != null) {
       for (var l in rawDeclensions) {
-        List<SpecialString> row = [];
+        List<String> row = [];
         for (var s in l) {
-          row.add(SpecialString(text: s.toString()));
+          row.add(s.toString());
         }
         declensions.add(row);
       }
@@ -64,31 +64,27 @@ List<QueryResult> singleWordQueryResult(List<dynamic> result,
     } else {
       declensions = null;
     }
+    print(declensions);
 
     queryResults.add(
       QueryResult(
-        navi: SpecialString(
-            text: lemmaForm(res['na\'vi'], res['type']), bold: true),
-        type: SpecialString(text: toReadableType(res['type'])),
+        navi: lemmaForm(res['na\'vi'], res['type']),
+        type: toReadableType(res['type']),
         pronunciation: res.containsKey('pronunciation')
-            ? pronunciationToSpecialStrings(res['pronunciation'], res['type'])
-            : [SpecialString(text: "Unknown stress pattern")],
+            ? pronunciationToStrings(res['pronunciation'], res['type'])
+            : ["Unknown stress pattern"],
         infixes: res.containsKey('infixes')
-            ? SpecialString(
-                text: res['infixes'].toString().replaceAll('.', '·'))
+            ? res['infixes'].toString().replaceAll('.', '·')
             : null,
-        status: res.containsKey('status')
-            ? SpecialString(text: ':warning: ' + res['status'])
-            : null,
+        status: res.containsKey('status') ? ':warning: ' + res['status'] : null,
         conjugation: res.containsKey('conjugated')
             ? conjugation(conjugated: res['conjugated'], short: false)
             : null,
         translation: res.containsKey('translations')
             ? getTranslation(res['translations'][0], language: language)
-            : SpecialString(text: "Missing translation section"),
-        meaningNote: res.containsKey('meaning_note')
-            ? SpecialString(text: res['meaning_note'])
-            : null,
+            : "Missing translation section",
+        meaningNote:
+            res.containsKey('meaning_note') ? res['meaning_note'] : null,
         affixes: res.containsKey('affixes')
             ? affixesSection(res['affixes'], language: language)
             : null,
@@ -148,35 +144,34 @@ String toReadableType(String type) {
 /// Transforms a [pronunciation], which contains a string with dash-separated
 /// syllables and a number indicating which syllable is stressed, into special
 /// strings for text formatting using the word [type].
-List<SpecialString> pronunciationToSpecialStrings(
-    List<dynamic> pronunciation, String type) {
+List<String> pronunciationToStrings(List<dynamic> pronunciation, String type) {
   if (pronunciation.isEmpty) {
-    return [SpecialString(text: "Unknown stress")];
+    return ["Unknown stress"];
   }
 
-  List<SpecialString> ret = [];
+  List<String> ret = [];
   List<String> syllables = pronunciation[0].split('-');
 
   for (int i = 0; i < syllables.length; i++) {
     if (i > 0) {
-      ret.add(SpecialString(text: '-'));
+      ret.add('-');
     }
     if (syllables.length > 1 && i + 1 == pronunciation[1]) {
-      ret.add(SpecialString(text: syllables[i], underlined: true));
+      ret.add('|${syllables[i]}|');
     } else {
-      ret.add(SpecialString(text: syllables[i]));
+      ret.add(syllables[i]);
     }
   }
 
   if (type == "n:si") {
-    ret.add(SpecialString(text: " si"));
+    ret.add(" si");
   }
 
   return ret;
 }
 
-List<SpecialString> conjugation({var conjugated, bool short = false}) {
-  List<SpecialString> result = [];
+List<String> conjugation({var conjugated, bool short = false}) {
+  List<String> result = [];
 
   for (int i = 0; i < conjugated.length; i++) {
     String type = conjugated[i]['type'];
@@ -190,7 +185,7 @@ List<SpecialString> conjugation({var conjugated, bool short = false}) {
 
     // Add separators starting from first element
     if (result.isNotEmpty) {
-      result.add(SpecialString(text: short ? ';' : '\n'));
+      result.add(short ? ';' : '\n');
     }
 
     switch (type) {
@@ -214,122 +209,116 @@ List<SpecialString> conjugation({var conjugated, bool short = false}) {
   return result;
 }
 
-List<SpecialString> nounConjugation({var conjugation, bool short = false}) {
-  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+List<String> nounConjugation({var conjugation, bool short = false}) {
+  List<String> result = [short ? '< ' : '→ '];
 
   for (int i = 0; i <= 2; i++) {
     if (conjugation['affixes'][i].toString().isNotEmpty) {
-      result.add(SpecialString(text: '${conjugation['affixes'][i]} + '));
+      result.add('${conjugation['affixes'][i]} + ');
     }
   }
 
-  result.add(SpecialString(text: conjugation['root']));
+  result.add(conjugation['root']);
 
   for (int i = 3; i <= 6; i++) {
     if (conjugation['affixes'][i].toString().isNotEmpty) {
-      result.add(SpecialString(text: ' + ${conjugation['affixes'][i]}'));
+      result.add(' + ${conjugation['affixes'][i]}');
     }
   }
 
   if (!short) {
     result
-      ..add(SpecialString(text: " = "))
-      ..add(SpecialString(text: conjugation['result'], bold: true));
+      ..add(" = ")
+      ..add(conjugation['result']);
   }
 
   return result;
 }
 
-List<SpecialString> verbConjugation({var conjugation, bool short = false}) {
-  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
-  result.add(SpecialString(text: conjugation['root']));
+List<String> verbConjugation({var conjugation, bool short = false}) {
+  List<String> result = [short ? '< ' : '→ '];
+  result.add(conjugation['root']);
 
   for (int i = 0; i < 3; i++) {
     if (conjugation['infixes'][i].toString().isNotEmpty) {
-      result.add(SpecialString(text: ' + <${conjugation['infixes'][i]}>'));
+      result.add(' + <${conjugation['infixes'][i]}>');
     }
   }
 
   if (!short) {
     result
-      ..add(SpecialString(text: " = "))
-      ..add(SpecialString(text: conjugation['result'], bold: true));
+      ..add(" = ")
+      ..add(conjugation['result']);
   }
 
   return result;
 }
 
-List<SpecialString> adjectiveConjugation(
-    {var conjugation, bool short = false}) {
-  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+List<String> adjectiveConjugation({var conjugation, bool short = false}) {
+  List<String> result = [short ? '< ' : '→ '];
 
   if (conjugation['form'] == 'postnoun') {
-    result.add(SpecialString(text: "a + "));
+    result.add("a + ");
   }
 
-  result.add(SpecialString(text: conjugation['root']));
+  result.add(conjugation['root']);
 
   if (conjugation['form'] == 'prenoun') {
-    result.add(SpecialString(text: " + a"));
+    result.add(" + a");
   }
 
   if (!short) {
     result
-      ..add(SpecialString(text: " = "))
-      ..add(SpecialString(text: conjugation['result'], bold: true));
+      ..add(" = ")
+      ..add(conjugation['result']);
   }
 
   return result;
 }
 
-List<SpecialString> verbToNounConjugation(
-    {var conjugation, bool short = false}) {
-  List<SpecialString> result = [SpecialString(text: short ? '< ' : '→ ')];
+List<String> verbToNounConjugation({var conjugation, bool short = false}) {
+  List<String> result = [short ? '< ' : '→ '];
 
   result
-    ..add(SpecialString(text: conjugation['root']))
-    ..add(SpecialString(text: ' + ${conjugation['affixes'][0]}'));
+    ..add(conjugation['root'])
+    ..add(' + ${conjugation['affixes'][0]}');
 
   if (!short) {
     result
-      ..add(SpecialString(text: " = "))
-      ..add(SpecialString(text: conjugation['result'], bold: true));
+      ..add(" = ")
+      ..add(conjugation['result']);
   }
 
   return result;
 }
 
-SpecialString getTranslation(Map<String, dynamic> translations,
+String getTranslation(Map<String, dynamic> translations,
     {required String language}) {
   if (translations.isNotEmpty) {
     print('$language => ${translations[language].toString()}');
-    return SpecialString(
-        // The bang operator use here is kinda nasty ngl
-        text: translations.containsKey(language)
-            ? translations[language]!.toString()
-            // : translations.containsKey('en')
-            //     ? translations['en']!.toString()
-            : 'Missing translation');
+// The bang operator use here is kinda nasty ngl
+    return translations.containsKey(language)
+        ? translations[language]!.toString()
+        : 'N/A';
   } else {
-    return SpecialString(text: 'Missing translation');
+    return 'Missing translation';
   }
 }
 
-List<SpecialString>? affixesSection(List<dynamic> affixes,
+List<String>? affixesSection(List<dynamic> affixes,
     {required String language}) {
-  List<SpecialString>? result = [];
+  List<String>? result = [];
   for (var affixParent in affixes) {
     final affix = affixParent['affix'];
     result
-      ..add(SpecialString(
-          text: lemmaForm(affix['na\'vi'], affix['type']), bold: true))
+      ..add(lemmaForm(affix['na\'vi'], affix['type']))
       ..add(getTranslation(affix['translations'][0], language: language));
   }
   return result;
 }
 
-List<List<SpecialString>> createNounDeclensions(String word, bool uncountable) {
-  List<List<SpecialString>> declensions = [];
+List<List<String>> createNounDeclensions(String word, bool uncountable) {
+  List<List<String>> declensions = [];
   List<Function> caseFunctions = [
     nouns.subjective,
     nouns.agentive,
@@ -352,32 +341,32 @@ List<List<SpecialString>> createNounDeclensions(String word, bool uncountable) {
         row.add(caseFunctions[j](plurals[i]));
       }
     }
-    declensions.add(row.map((String s) => SpecialString(text: s)).toList());
+    declensions.add(row);
   }
 
   declensions =
-      declensions.where((List<SpecialString> lss) => lss.isNotEmpty).toList();
-  declensions += List<List<SpecialString>>.generate(
+      declensions.where((List<String> lss) => lss.isNotEmpty).toList();
+  declensions += List<List<String>>.generate(
     4 - declensions.length,
-    (__) => List<SpecialString>.generate(
+    (__) => List<String>.generate(
       6,
-      (_) => SpecialString(text: '-x-'),
+      (_) => '-x-',
     ),
   );
   return declensions;
 }
 
 class QueryResult {
-  final SpecialString navi;
-  final SpecialString type;
-  final List<SpecialString> pronunciation;
-  final SpecialString translation;
-  final SpecialString? infixes;
-  final SpecialString? status;
-  final List<SpecialString>? conjugation;
-  final SpecialString? meaningNote;
-  final List<SpecialString>? affixes;
-  final List<List<SpecialString>>? declensions;
+  final String navi;
+  final String type;
+  final List<String> pronunciation;
+  final String translation;
+  final String? infixes;
+  final String? status;
+  final List<String>? conjugation;
+  final String? meaningNote;
+  final List<String>? affixes;
+  final List<List<String>>? declensions;
 
   const QueryResult({
     required this.navi,
@@ -390,19 +379,5 @@ class QueryResult {
     this.meaningNote,
     this.affixes,
     this.declensions,
-  });
-}
-
-class SpecialString {
-  final String text;
-  final bool bold;
-  final bool italic;
-  final bool underlined;
-
-  SpecialString({
-    this.text = "",
-    this.bold = false,
-    this.italic = false,
-    this.underlined = false,
   });
 }
