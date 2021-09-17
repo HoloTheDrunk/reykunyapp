@@ -295,47 +295,69 @@ class QueryResultCard extends StatelessWidget {
               ),
               if (queryResult.declensions != null &&
                   queryResult.declensions!.isNotEmpty)
-                SizedBox(
-                  height: 200.0,
-                  width: 200.0,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    shrinkWrap: true,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(" "),
-                          for (String form in [
-                            'subjective',
-                            'agentive',
-                            'patientive',
-                            'dative',
-                            'genitive',
-                            'topical',
-                          ])
-                            Text(
-                              form,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                Center(
+                  child: SizedBox(
+                    height: 200.0,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: true,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(" "),
+                            for (String form in [
+                              'subjective',
+                              'agentive',
+                              'patientive',
+                              'dative',
+                              'genitive',
+                              'topical',
+                            ])
+                              Text(
+                                form,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
-                        ],
-                      ),
-                      //TODO fix broken column, look into declensions again
-                      for (int plurality = 0;
-                          plurality < queryResult.declensions!.length;
-                          plurality++) ...[
-                        Text(["singular, dual, trial, plural"][plurality]),
-                        for (int declension = 0;
-                            declension < queryResult.declensions![0].length;
-                            declension++)
-                          RichText(
-                              text: parseDeclension(queryResult
-                                  .declensions![declension][plurality]))
-                      ]
-                    ],
+                          ],
+                        ),
+                        SizedBox(
+                          width: 16.0,
+                        ),
+                        for (int plurality = 0;
+                            plurality < queryResult.declensions!.length;
+                            plurality++) ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                [
+                                  "singular",
+                                  "dual",
+                                  "trial",
+                                  "plural"
+                                ][plurality],
+                              ),
+                              for (int declension = 0;
+                                  declension <
+                                      queryResult.declensions![0].length;
+                                  declension++)
+                                RichText(
+                                  text: parseDeclension(
+                                    queryResult.declensions![plurality]
+                                        [declension],
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(
+                            width: 32.0,
+                          ),
+                        ]
+                      ],
+                    ),
                   ),
                 ),
               // Table(
