@@ -71,8 +71,9 @@ List<QueryResult> singleWordQueryResult(List<dynamic> result,
         navi: lemmaForm(res['na\'vi'], res['type']),
         type: toReadableType(res['type']),
         pronunciation: res.containsKey('pronunciation')
-            ? pronunciationToStrings(res['pronunciation'], res['type'])
+            ? pronunciationToList(res['pronunciation'], res['type'])
             : ["Unknown stress pattern"],
+        stress: res.containsKey('pronunciation') ? res['pronunciation'][1] : 0,
         infixes: res.containsKey('infixes')
             ? res['infixes'].toString().replaceAll('.', '·')
             : null,
@@ -142,9 +143,9 @@ String toReadableType(String type) {
 }
 
 /// Transforms a [pronunciation], which contains a string with dash-separated
-/// syllables and a number indicating which syllable is stressed, into special
-/// strings for text formatting using the word [type].
-List<String> pronunciationToStrings(List<dynamic> pronunciation, String type) {
+/// syllables and a number indicating which syllable is stressed into strings
+/// for text formatting according to the word [type].
+List<String> pronunciationToList(List<dynamic> pronunciation, String type) {
   if (pronunciation.isEmpty) {
     return ["Unknown stress"];
   }
@@ -157,7 +158,7 @@ List<String> pronunciationToStrings(List<dynamic> pronunciation, String type) {
       ret.add('-');
     }
     if (syllables.length > 1 && i + 1 == pronunciation[1]) {
-      ret.add('|${syllables[i]}|');
+      ret.add(syllables[i]);
     } else {
       ret.add(syllables[i]);
     }
@@ -295,8 +296,8 @@ List<String> verbToNounConjugation({var conjugation, bool short = false}) {
 String getTranslation(Map<String, dynamic> translations,
     {required String language}) {
   if (translations.isNotEmpty) {
-    print('$language => ${translations[language].toString()}');
-// The bang operator use here is kinda nasty ngl
+    //   print('$language => ${translations[language].toString()}');
+    // The bang operator use here is kinda nasty ngl
     return translations.containsKey(language)
         ? translations[language]!.toString()
         : 'N/A';
@@ -360,6 +361,7 @@ class QueryResult {
   final String navi;
   final String type;
   final List<String> pronunciation;
+  final int stress;
   final String translation;
   final String? infixes;
   final String? status;
@@ -372,6 +374,7 @@ class QueryResult {
     required this.navi,
     required this.type,
     required this.pronunciation,
+    required this.stress,
     required this.translation,
     this.infixes,
     this.status,

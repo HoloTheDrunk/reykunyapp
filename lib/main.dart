@@ -214,19 +214,7 @@ class QueryResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextSpan pronunciation = TextSpan(children: []);
-
-    for (int i = 0; i < queryResult.pronunciation.length; i++) {
-      pronunciation.children?.add(
-        TextSpan(
-          text: queryResult.pronunciation[i],
-/*           style: TextStyle(
-              decoration: queryResult.pronunciation[i]
-                  ? TextDecoration.underline
-                  : TextDecoration.none), */
-        ),
-      );
-    }
+    DeclensionTable declensions = DeclensionTable(queryResult: queryResult);
 
     try {
       return Padding(
@@ -248,7 +236,8 @@ class QueryResultCard extends StatelessWidget {
                 ),
               ),
               Text.rich(
-                pronunciation,
+                prettyPronunciation(
+                    queryResult.pronunciation, queryResult.stress),
               ),
               LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
@@ -295,71 +284,7 @@ class QueryResultCard extends StatelessWidget {
               ),
               if (queryResult.declensions != null &&
                   queryResult.declensions!.isNotEmpty)
-                Center(
-                  child: SizedBox(
-                    height: 200.0,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(" "),
-                            for (String form in [
-                              'subjective',
-                              'agentive',
-                              'patientive',
-                              'dative',
-                              'genitive',
-                              'topical',
-                            ])
-                              Text(
-                                form,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 16.0,
-                        ),
-                        for (int plurality = 0;
-                            plurality < queryResult.declensions!.length;
-                            plurality++) ...[
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                [
-                                  "singular",
-                                  "dual",
-                                  "trial",
-                                  "plural"
-                                ][plurality],
-                              ),
-                              for (int declension = 0;
-                                  declension <
-                                      queryResult.declensions![0].length;
-                                  declension++)
-                                RichText(
-                                  text: parseDeclension(
-                                    queryResult.declensions![plurality]
-                                        [declension],
-                                  ),
-                                ),
-                            ],
-                          ),
-                          SizedBox(
-                            width: 32.0,
-                          ),
-                        ]
-                      ],
-                    ),
-                  ),
-                ),
+                declensions
               // Table(
               //   defaultColumnWidth: FlexColumnWidth(),
               //   children: [
@@ -417,9 +342,98 @@ class QueryResultCard extends StatelessWidget {
       );
     } catch (e) {
       print('${queryResult.navi} is causing problems');
-      throw e;
+      return Container(
+        child: Text(
+          "ERROR (${queryResult.navi}): ${e}",
+          textAlign: TextAlign.center,
+        ),
+      );
     }
   }
+}
+
+class DeclensionTable extends StatelessWidget {
+  final QueryResult queryResult;
+  const DeclensionTable({required QueryResult this.queryResult, Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        height: 200.0,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
+          children: [
+            // Declension names
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Empty cell top-left of the table
+                Text(" "),
+                for (String form in [
+                  'subjective',
+                  'agentive',
+                  'patientive',
+                  'dative',
+                  'genitive',
+                  'topical',
+                ])
+                  Text(
+                    form,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(
+              width: 16.0,
+            ),
+            // Actual declensions
+            for (int plurality = 0;
+                plurality < queryResult.declensions!.length;
+                plurality++) ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ["singular", "dual", "trial", "plural"][plurality],
+                  ),
+                  for (int declension = 0;
+                      declension < queryResult.declensions![0].length;
+                      declension++)
+                    RichText(
+                      text: parseDeclension(
+                        queryResult.declensions![plurality][declension],
+                      ),
+                    ),
+                ],
+              ),
+              SizedBox(
+                width: 32.0,
+              ),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+TextSpan prettyPronunciation(List<String> pronunciation, int stress) {
+  return TextSpan(
+    children: [
+      for (int i = 0; i < pronunciation.length; i++)
+        TextSpan(
+          text: pronunciation[i],
+          style: TextStyle(
+              fontStyle: i == stress ? FontStyle.italic : FontStyle.normal),
+        ),
+    ],
+  );
 }
 
 TextSpan parseDeclension(String declension) {
