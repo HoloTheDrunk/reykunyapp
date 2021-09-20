@@ -4,7 +4,7 @@ import 'package:reykunyapp/nouns.dart' as nouns;
 
 Future<List<QueryResult>> getQueryResults(
     {required String query,
-    required String language,
+    required String languageCode,
     required bool reversed}) async {
   http.Response response;
   if (!reversed) {
@@ -14,7 +14,7 @@ Future<List<QueryResult>> getQueryResults(
   } else {
     response = await http.get(
       Uri.parse(
-          'https://reykunyu.wimiso.nl/api/search?language=$language&query=$query'),
+          'https://reykunyu.wimiso.nl/api/search?language=$languageCode&query=$query'),
     );
   }
 
@@ -28,9 +28,10 @@ Future<List<QueryResult>> getQueryResults(
   if (data.length == 0) {
     return [];
   } else if (data.length == 1) {
-    return singleWordQueryResult(data[0]['sì\'eyng'], language: language);
+    return singleWordQueryResult(data[0]['sì\'eyng'],
+        languageCode: languageCode);
   } else {
-    return singleWordQueryResult(data, language: language);
+    return singleWordQueryResult(data, languageCode: languageCode);
   }
 }
 
@@ -43,7 +44,7 @@ Future<String?> getAnnotatedDictionaryEntry({required String naviQuery}) async {
 }
 
 Future<List<QueryResult>> singleWordQueryResult(List<dynamic> result,
-    {List<dynamic>? suggestions, String language = 'en'}) async {
+    {List<dynamic>? suggestions, String languageCode = 'en'}) async {
   List<QueryResult> queryResults = [];
 
   for (int i = 0; i < result.length; i++) {
@@ -89,12 +90,12 @@ Future<List<QueryResult>> singleWordQueryResult(List<dynamic> result,
             ? conjugation(conjugated: res['conjugated'], short: false)
             : null,
         translation: res.containsKey('translations')
-            ? getTranslation(res['translations'][0], language: language)
+            ? getTranslation(res['translations'][0], language: languageCode)
             : "Missing translation section",
         meaningNote:
             res.containsKey('meaning_note') ? res['meaning_note'] : null,
         affixes: res.containsKey('affixes')
-            ? affixesSection(res['affixes'], language: language)
+            ? affixesSection(res['affixes'], language: languageCode)
             : null,
         declensions: declensions,
         annotatedDictEntry: dictEntry,

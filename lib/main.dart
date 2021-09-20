@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:reykunyapp/api_access.dart';
+import 'package:reykunyapp/languages.dart';
 
 import 'package:folding_cell/folding_cell.dart';
 
@@ -52,29 +53,26 @@ class _HomePageState extends State<HomePage> {
   List<QueryResult> queryResults = [];
   bool reverseSearching = false;
 
-  final List<String> languages = <String>[
-    'English',
-    'Français',
-    'Deutsche',
-    'Nederlands',
-  ];
-  final Map<String, String> languageCodes = {
-    'English': 'en',
-    'Français': 'fr',
-    'Deutsche': 'de',
-    'Nederlands': 'nl',
-  };
-  String chosenLanguage = 'English';
-  String chosenLanguageCode = 'en';
-
-  Future<List<QueryResult>> getFutureQueryResults(String query) {
+  Future<List<QueryResult>> getFutureQueryResults(
+      String query, String languageCode) {
     Future<List<QueryResult>> futureQueryResults = getQueryResults(
-        query: query, language: chosenLanguageCode, reversed: reverseSearching);
+        query: query, languageCode: languageCode, reversed: reverseSearching);
+
     return futureQueryResults;
   }
 
   @override
   Widget build(BuildContext context) {
+    String chosenLanguage = languages[0];
+    String chosenLanguageCode = languageCodes[chosenLanguage] ?? 'en';
+
+    LanguageSelector languageSelector = LanguageSelector(
+      onUpdate: (lang, langCode) {
+        chosenLanguage = lang;
+        chosenLanguageCode = langCode;
+      },
+    );
+
     print(languageCodes.keys.toList());
     return Scaffold(
       appBar: AppBar(
@@ -82,28 +80,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
-            child: DropdownButton(
-              hint: Text('Select language'),
-              value: chosenLanguage,
-              onChanged: (newLanguage) {
-                setState(() {
-                  chosenLanguage = newLanguage.toString();
-                  chosenLanguageCode = languageCodes[chosenLanguage] ?? 'en';
-                });
-              },
-              icon: Icon(Icons.translate),
-              items: languages
-                  .where(
-                      (String language) => languageCodes.containsKey(language))
-                  .map<DropdownMenuItem<String>>(
-                (String language) {
-                  return DropdownMenuItem(
-                    value: language,
-                    child: Text(language),
-                  );
-                },
-              ).toList(),
-            ),
+            child: languageSelector,
           ),
           IconButton(
             onPressed: () {
@@ -129,7 +106,7 @@ class _HomePageState extends State<HomePage> {
           SearchBar(
             callback: (String query) {
               Future<List<QueryResult>> futureQueryResults =
-                  getFutureQueryResults(query);
+                  getFutureQueryResults(query, chosenLanguageCode);
               futureQueryResults.then(
                 (value) {
                   setState(() {
@@ -203,6 +180,52 @@ class _SearchBarState extends State<SearchBar> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class LanguageSelector extends StatefulWidget {
+  const LanguageSelector(
+      {required Function(String, String) this.onUpdate, Key? key})
+      : super(key: key);
+
+  final Function(String, String) onUpdate;
+
+  @override
+  _LanguageSelectorState createState() => _LanguageSelectorState();
+}
+
+class _LanguageSelectorState extends State<LanguageSelector> {
+  String chosenLanguage = 'English';
+  String chosenLanguageCode = 'en';
+
+  String getLanguage() {
+    return chosenLanguage;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton(
+      hint: Text('Select language'),
+      value: chosenLanguage,
+      onChanged: (newLanguage) {
+        setState(() {
+          chosenLanguage = newLanguage.toString();
+          chosenLanguageCode = languageCodes[chosenLanguage] ?? 'en';
+          widget.onUpdate(chosenLanguage, chosenLanguageCode);
+        });
+      },
+      icon: Icon(Icons.translate),
+      items: languages
+          .where((String language) => languageCodes.containsKey(language))
+          .map<DropdownMenuItem<String>>(
+        (String language) {
+          return DropdownMenuItem(
+            value: language,
+            child: Text(language),
+          );
+        },
+      ).toList(),
     );
   }
 }
