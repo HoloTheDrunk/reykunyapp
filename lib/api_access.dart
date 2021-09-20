@@ -34,16 +34,23 @@ Future<List<QueryResult>> getQueryResults(
   }
 }
 
-List<QueryResult> singleWordQueryResult(List<dynamic> result,
-    {List<dynamic>? suggestions, String language = 'en'}) {
-  if (result.length == 0) {
-    return [];
-  }
+Future<String?> getAnnotatedDictionaryEntry({required String naviQuery}) async {
+  http.Response? dictResponse = await http.get(
+    Uri.parse(
+        'https://reykunyu.wimiso.nl/api/annotated/search?query=$naviQuery'),
+  );
+  return jsonDecode(dictResponse.body)[0];
+}
 
+Future<List<QueryResult>> singleWordQueryResult(List<dynamic> result,
+    {List<dynamic>? suggestions, String language = 'en'}) async {
   List<QueryResult> queryResults = [];
 
   for (int i = 0; i < result.length; i++) {
     var res = result[i];
+
+    String? dictEntry =
+        await getAnnotatedDictionaryEntry(naviQuery: res['na\'vi']);
 
     final rawDeclensions =
         res.containsKey('conjugation') ? res['conjugation']['forms'] : null;
@@ -90,6 +97,7 @@ List<QueryResult> singleWordQueryResult(List<dynamic> result,
             ? affixesSection(res['affixes'], language: language)
             : null,
         declensions: declensions,
+        annotatedDictEntry: dictEntry,
       ),
     );
   }
@@ -369,6 +377,7 @@ class QueryResult {
   final String? meaningNote;
   final List<String>? affixes;
   final List<List<String>>? declensions;
+  final String? annotatedDictEntry;
 
   const QueryResult({
     required this.navi,
@@ -382,5 +391,6 @@ class QueryResult {
     this.meaningNote,
     this.affixes,
     this.declensions,
+    this.annotatedDictEntry,
   });
 }

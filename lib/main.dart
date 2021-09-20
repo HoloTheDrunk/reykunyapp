@@ -65,7 +65,6 @@ class _HomePageState extends State<HomePage> {
   String chosenLanguageCode = 'en';
 
   Future<List<QueryResult>> getFutureQueryResults(String query) {
-    print('getFutureQueryResults using language: $chosenLanguageCode');
     Future<List<QueryResult>> futureQueryResults = getQueryResults(
         query: query, language: chosenLanguageCode, reversed: reverseSearching);
     return futureQueryResults;
