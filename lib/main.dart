@@ -7,8 +7,6 @@ import 'package:flutter/rendering.dart';
 import 'package:reykunyapp/api_access.dart';
 import 'package:reykunyapp/languages.dart';
 
-import 'package:folding_cell/folding_cell.dart';
-
 void main() {
   runApp(MyApp());
 }
@@ -105,15 +103,19 @@ class _HomePageState extends State<HomePage> {
         children: [
           SearchBar(
             callback: (String query) {
-              Future<List<QueryResult>> futureQueryResults =
-                  getFutureQueryResults(query, chosenLanguageCode);
-              futureQueryResults.then(
-                (value) {
-                  setState(() {
-                    queryResults = value;
-                  });
-                },
-              );
+              try {
+                Future<List<QueryResult>> futureQueryResults =
+                    getFutureQueryResults(query, chosenLanguageCode);
+                futureQueryResults.then(
+                  (value) {
+                    setState(() {
+                      queryResults = value;
+                    });
+                  },
+                );
+              } catch (e) {
+                print(e);
+              }
             },
           ),
           Expanded(
@@ -248,17 +250,21 @@ class QueryResultCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text.rich(
-                TextSpan(
-                  text: queryResult.navi + ' ',
-                  style: Theme.of(context).textTheme.headline4,
-                  children: [
+              Row(
+                children: [
+                  Text.rich(
                     TextSpan(
-                      text: queryResult.type,
-                      style: Theme.of(context).textTheme.headline6,
-                    )
-                  ],
-                ),
+                      text: queryResult.navi + ' ',
+                      style: Theme.of(context).textTheme.headline4,
+                      children: [
+                        TextSpan(
+                          text: queryResult.type,
+                          style: Theme.of(context).textTheme.headline6,
+                        )
+                      ],
+                    ),
+                  ),
+                ],
               ),
               Text.rich(
                 prettyPronunciation(
@@ -309,58 +315,7 @@ class QueryResultCard extends StatelessWidget {
               ),
               if (queryResult.declensions != null &&
                   queryResult.declensions!.isNotEmpty)
-                declensions
-              // Table(
-              //   defaultColumnWidth: FlexColumnWidth(),
-              //   children: [
-              //     TableRow(
-              //       children: [
-              //         Container(),
-              //         for (String plurality in [
-              //           'singular',
-              //           'dual',
-              //           'trial',
-              //           'plural',
-              //         ])
-              //           Text(
-              //             plurality,
-              //             style: TextStyle(
-              //                 fontWeight: FontWeight.bold, fontSize: 14),
-              //           )
-              //       ],
-              //     ),
-              //     for (int i = 0; i < queryResult.declensions![0].length; i++)
-              //       TableRow(
-              //         children: [
-              //           Padding(
-              //             padding: const EdgeInsets.only(right: 8.0),
-              //             child: Text(
-              //               [
-              //                 'subjective',
-              //                 'agentive',
-              //                 'patientive',
-              //                 'dative',
-              //                 'genitive',
-              //                 'topical'
-              //               ][i],
-              //               style: TextStyle(
-              //                   fontWeight: FontWeight.bold, fontSize: 14),
-              //               textAlign: TextAlign.right,
-              //             ),
-              //           ),
-              //           for (int j = 0;
-              //               j < (queryResult.declensions?.length ?? 0);
-              //               j++)
-              //             RichText(
-              //               text: parseDeclension(
-              //                 // TextSpan(
-              //                 queryResult.declensions![j][i].text,
-              //               ),
-              //             ),
-              //         ],
-              //       ),
-              //   ],
-              // ),
+                if (queryResult.declensions![0].length > 0) declensions
             ],
           ),
         ),
@@ -386,7 +341,7 @@ class DeclensionTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        height: 200.0,
+        height: 150.0,
         child: ListView(
           scrollDirection: Axis.horizontal,
           shrinkWrap: true,
@@ -419,7 +374,8 @@ class DeclensionTable extends StatelessWidget {
             ),
             // Actual declensions
             for (int plurality = 0;
-                plurality < queryResult.declensions!.length;
+                plurality < queryResult.declensions!.length &&
+                    queryResult.declensions![plurality].length > 0;
                 plurality++) ...[
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,7 +384,7 @@ class DeclensionTable extends StatelessWidget {
                     ["singular", "dual", "trial", "plural"][plurality],
                   ),
                   for (int declension = 0;
-                      declension < queryResult.declensions![0].length;
+                      declension < queryResult.declensions![plurality].length;
                       declension++)
                     RichText(
                       text: parseDeclension(

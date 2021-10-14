@@ -28,10 +28,17 @@ Future<List<QueryResult>> getQueryResults(
   if (data.length == 0) {
     return [];
   } else if (data.length == 1) {
-    return singleWordQueryResult(data[0]['sì\'eyng'],
-        languageCode: languageCode);
+    return singleWordQueryResult(
+      data[0]['sì\'eyng'],
+      languageCode: languageCode,
+      reversed: reversed,
+    );
   } else {
-    return singleWordQueryResult(data, languageCode: languageCode);
+    return singleWordQueryResult(
+      data,
+      languageCode: languageCode,
+      reversed: reversed,
+    );
   }
 }
 
@@ -43,15 +50,20 @@ Future<String?> getAnnotatedDictionaryEntry({required String naviQuery}) async {
   return jsonDecode(dictResponse.body)[0];
 }
 
-Future<List<QueryResult>> singleWordQueryResult(List<dynamic> result,
-    {List<dynamic>? suggestions, String languageCode = 'en'}) async {
+Future<List<QueryResult>> singleWordQueryResult(
+  List<dynamic> result, {
+  List<dynamic>? suggestions,
+  String languageCode = 'en',
+  bool reversed = false,
+}) async {
   List<QueryResult> queryResults = [];
 
   for (int i = 0; i < result.length; i++) {
     var res = result[i];
 
-    String? dictEntry =
-        await getAnnotatedDictionaryEntry(naviQuery: res['na\'vi']);
+    String? dictEntry = null;
+    if (!reversed)
+      dictEntry = await getAnnotatedDictionaryEntry(naviQuery: res['na\'vi']);
 
     final rawDeclensions =
         res.containsKey('conjugation') ? res['conjugation']['forms'] : null;
@@ -98,7 +110,7 @@ Future<List<QueryResult>> singleWordQueryResult(List<dynamic> result,
             ? affixesSection(res['affixes'], language: languageCode)
             : null,
         declensions: declensions,
-        annotatedDictEntry: dictEntry,
+        annotatedDictEntry: dictEntry ?? "",
       ),
     );
   }
