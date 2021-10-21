@@ -252,96 +252,86 @@ class _QueryResultCardState extends State<QueryResultCard> {
     try {
       return Padding(
         padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
-        child: Container(
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Column(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    text: widget.queryResult.navi + ' ',
+                    style: Theme.of(context).textTheme.headline4,
                     children: [
-                      Text.rich(
-                        TextSpan(
-                          text: widget.queryResult.navi + ' ',
-                          style: Theme.of(context).textTheme.headline4,
-                          children: [
-                            TextSpan(
-                              text: widget.queryResult.type,
-                              style: Theme.of(context).textTheme.headline6,
-                            )
-                          ],
-                        ),
-                      ),
-                      Text.rich(
-                        prettyPronunciation(widget.queryResult.pronunciation,
-                            widget.queryResult.stress),
-                      ),
-                      LayoutBuilder(
-                        builder:
-                            (BuildContext context, BoxConstraints constraints) {
-                          return Divider(
-                            endIndent: constraints.maxWidth * 0.9,
-                          );
-                        },
-                      ),
-                      Text.rich(
-                        TextSpan(
-                          text: widget.queryResult.translation,
-                          style: Theme.of(context).textTheme.headline5,
-                        ),
-                      ),
-                      LayoutBuilder(
-                        builder:
-                            (BuildContext context, BoxConstraints constraints) {
-                          return Divider(
-                            endIndent: constraints.maxWidth * 0.9,
-                          );
-                        },
-                      ),
-                      if (widget.queryResult.meaningNote != null)
-                        Text.rich(
-                          TextSpan(
-                            text: widget.queryResult.meaningNote,
-                            style: Theme.of(context).textTheme.bodyText1,
-                          ),
-                        ),
-                      if (widget.queryResult.affixes?.isNotEmpty ?? false) ...[
-                        Text("Affixes: ",
-                            style: Theme.of(context).textTheme.headline6),
-                        Padding(
-                          padding: EdgeInsets.only(left: 8.0, top: 8.0),
-                          child: Column(
-                            children: [
-                              for (int i = 0;
-                                  i < (widget.queryResult.affixes?.length ?? 0);
-                                  i += 2)
-                                Text(
-                                  '${widget.queryResult.affixes![i]}: ${widget.queryResult.affixes![i + 1]}',
-                                  style: Theme.of(context).textTheme.bodyText1,
-                                ),
-                            ],
-                          ),
-                        ),
-                        LayoutBuilder(
-                          builder: (BuildContext context,
-                              BoxConstraints constraints) {
-                            return Divider(
-                              endIndent: constraints.maxWidth * 0.9,
-                            );
-                          },
-                        ),
-                      ],
+                      TextSpan(
+                        text: widget.queryResult.type,
+                        style: Theme.of(context).textTheme.headline6,
+                      )
                     ],
                   ),
-                  if (widget.queryResult.declensions != null &&
-                      widget.queryResult.declensions!.isNotEmpty)
-                    if (widget.queryResult.declensions![0].length > 0)
-                      declensions,
+                ),
+                Text.rich(
+                  prettyPronunciation(widget.queryResult.pronunciation,
+                      widget.queryResult.stress),
+                ),
+                LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    return Divider(
+                      endIndent: constraints.maxWidth * 0.9,
+                    );
+                  },
+                ),
+                Text.rich(
+                  TextSpan(
+                    text: widget.queryResult.translation,
+                    style: Theme.of(context).textTheme.headline5,
+                  ),
+                ),
+                LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    return Divider(
+                      endIndent: constraints.maxWidth * 0.9,
+                    );
+                  },
+                ),
+                if (widget.queryResult.meaningNote != null)
+                  Text.rich(
+                    TextSpan(
+                      text: widget.queryResult.meaningNote,
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ),
+                  ),
+                if (widget.queryResult.affixes?.isNotEmpty ?? false) ...[
+                  Text("Affixes: ",
+                      style: Theme.of(context).textTheme.headline6),
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0, top: 8.0),
+                    child: Column(
+                      children: [
+                        for (int i = 0;
+                            i < (widget.queryResult.affixes?.length ?? 0);
+                            i += 2)
+                          Text(
+                            '${widget.queryResult.affixes![i]}: ${widget.queryResult.affixes![i + 1]}',
+                            style: Theme.of(context).textTheme.bodyText1,
+                          ),
+                      ],
+                    ),
+                  ),
+                  LayoutBuilder(
+                    builder:
+                        (BuildContext context, BoxConstraints constraints) {
+                      return Divider(
+                        endIndent: constraints.maxWidth * 0.9,
+                      );
+                    },
+                  ),
                 ],
-              ),
-            ],
-          ),
+              ],
+            ),
+            if (widget.queryResult.declensions != null &&
+                widget.queryResult.declensions!.isNotEmpty)
+              if (widget.queryResult.declensions![0].length > 0) declensions,
+          ],
         ),
       );
     } catch (e) {
