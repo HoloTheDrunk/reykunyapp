@@ -121,18 +121,10 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: ListView(
               children: [
-                for (int i = 0; i < 2 * queryResults.length - 1; i++)
-                  if (i % 2 == 0)
-                    QueryResultCard(
-                      queryResult: queryResults[i ~/ 2],
-                    )
-                  else
-                    Divider(
-                      indent: 10,
-                      endIndent: 10,
-                      thickness: 3.0,
-                    )
-                // SearchResultRaw(json: queryResults[i].navi.text),
+                for (int i = 0; i < queryResults.length; i++)
+                  QueryResultCard(
+                    queryResult: queryResults[i],
+                  )
               ],
             ),
           ),
