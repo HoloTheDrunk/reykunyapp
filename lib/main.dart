@@ -297,7 +297,7 @@ class _QueryResultCardState extends State<QueryResultCard> {
                   Text("Affixes: ",
                       style: Theme.of(context).textTheme.headline6),
                   Padding(
-                    padding: EdgeInsets.only(left: 8.0, top: 8.0),
+                    padding: EdgeInsets.all(8.0),
                     child: Column(
                       children: [
                         for (int i = 0;
@@ -310,20 +310,21 @@ class _QueryResultCardState extends State<QueryResultCard> {
                       ],
                     ),
                   ),
-                  LayoutBuilder(
-                    builder:
-                        (BuildContext context, BoxConstraints constraints) {
-                      return Divider(
-                        endIndent: constraints.maxWidth * 0.9,
-                      );
-                    },
-                  ),
                 ],
               ],
             ),
             if (widget.queryResult.declensions != null &&
                 widget.queryResult.declensions!.isNotEmpty)
-              if (widget.queryResult.declensions![0].length > 0) declensions,
+              if (widget.queryResult.declensions![0].length > 0) ...[
+                LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    return Divider(
+                      endIndent: constraints.maxWidth * 0.9,
+                    );
+                  },
+                ),
+                declensions,
+              ],
           ],
         ),
       );
