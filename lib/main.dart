@@ -232,7 +232,7 @@ class _LanguageSelectorState extends State<LanguageSelector> {
   }
 }
 
-class QueryResultCard extends StatelessWidget {
+class QueryResultCard extends StatefulWidget {
   final QueryResult queryResult;
   const QueryResultCard({
     required this.queryResult,
@@ -240,91 +240,115 @@ class QueryResultCard extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<QueryResultCard> createState() => _QueryResultCardState();
+}
+
+class _QueryResultCardState extends State<QueryResultCard> {
+  @override
   Widget build(BuildContext context) {
-    DeclensionTable declensions = DeclensionTable(queryResult: queryResult);
+    DeclensionTable declensions =
+        DeclensionTable(queryResult: widget.queryResult);
 
     try {
       return Padding(
         padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
         child: Container(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Row(
+              Column(
                 children: [
-                  Text.rich(
-                    TextSpan(
-                      text: queryResult.navi + ' ',
-                      style: Theme.of(context).textTheme.headline4,
-                      children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(
                         TextSpan(
-                          text: queryResult.type,
-                          style: Theme.of(context).textTheme.headline6,
-                        )
+                          text: widget.queryResult.navi + ' ',
+                          style: Theme.of(context).textTheme.headline4,
+                          children: [
+                            TextSpan(
+                              text: widget.queryResult.type,
+                              style: Theme.of(context).textTheme.headline6,
+                            )
+                          ],
+                        ),
+                      ),
+                      Text.rich(
+                        prettyPronunciation(widget.queryResult.pronunciation,
+                            widget.queryResult.stress),
+                      ),
+                      LayoutBuilder(
+                        builder:
+                            (BuildContext context, BoxConstraints constraints) {
+                          return Divider(
+                            endIndent: constraints.maxWidth * 0.9,
+                          );
+                        },
+                      ),
+                      Text.rich(
+                        TextSpan(
+                          text: widget.queryResult.translation,
+                          style: Theme.of(context).textTheme.headline5,
+                        ),
+                      ),
+                      LayoutBuilder(
+                        builder:
+                            (BuildContext context, BoxConstraints constraints) {
+                          return Divider(
+                            endIndent: constraints.maxWidth * 0.9,
+                          );
+                        },
+                      ),
+                      if (widget.queryResult.meaningNote != null)
+                        Text.rich(
+                          TextSpan(
+                            text: widget.queryResult.meaningNote,
+                            style: Theme.of(context).textTheme.bodyText1,
+                          ),
+                        ),
+                      if (widget.queryResult.affixes?.isNotEmpty ?? false) ...[
+                        Text("Affixes: ",
+                            style: Theme.of(context).textTheme.headline6),
+                        Padding(
+                          padding: EdgeInsets.only(left: 8.0, top: 8.0),
+                          child: Column(
+                            children: [
+                              for (int i = 0;
+                                  i < (widget.queryResult.affixes?.length ?? 0);
+                                  i += 2)
+                                Text(
+                                  '${widget.queryResult.affixes![i]}: ${widget.queryResult.affixes![i + 1]}',
+                                  style: Theme.of(context).textTheme.bodyText1,
+                                ),
+                            ],
+                          ),
+                        ),
+                        LayoutBuilder(
+                          builder: (BuildContext context,
+                              BoxConstraints constraints) {
+                            return Divider(
+                              endIndent: constraints.maxWidth * 0.9,
+                            );
+                          },
+                        ),
                       ],
-                    ),
+                    ],
                   ),
+                  if (widget.queryResult.declensions != null &&
+                      widget.queryResult.declensions!.isNotEmpty)
+                    if (widget.queryResult.declensions![0].length > 0)
+                      declensions,
                 ],
               ),
-              Text.rich(
-                prettyPronunciation(
-                    queryResult.pronunciation, queryResult.stress),
-              ),
-              LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  return Divider(
-                    endIndent: constraints.maxWidth * 0.9,
-                  );
-                },
-              ),
-              Text.rich(
-                TextSpan(
-                  text: queryResult.translation,
-                  style: Theme.of(context).textTheme.headline5,
-                ),
-              ),
-              if (queryResult.meaningNote != null)
-                Text.rich(
-                  TextSpan(
-                    text: queryResult.meaningNote,
-                    style: Theme.of(context).textTheme.bodyText1,
-                  ),
-                ),
-              LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  return Divider(
-                    endIndent: constraints.maxWidth * 0.9,
-                  );
-                },
-              ),
-              if (queryResult.affixes?.isNotEmpty ?? false)
-                Text("Affixes: ", style: Theme.of(context).textTheme.headline6),
-              Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: Column(
-                  children: [
-                    for (int i = 0;
-                        i < (queryResult.affixes?.length ?? 0);
-                        i += 2)
-                      Text(
-                        '${queryResult.affixes![i]}: ${queryResult.affixes![i + 1]}',
-                        style: Theme.of(context).textTheme.bodyText1,
-                      ),
-                  ],
-                ),
-              ),
-              if (queryResult.declensions != null &&
-                  queryResult.declensions!.isNotEmpty)
-                if (queryResult.declensions![0].length > 0) declensions
             ],
           ),
         ),
       );
     } catch (e) {
-      print('${queryResult.navi} is causing problems');
+      print('${widget.queryResult.navi} is causing problems');
       return Container(
         child: Text(
-          "ERROR (${queryResult.navi}): ${e}",
+          "ERROR (${widget.queryResult.navi}): ${e}",
           textAlign: TextAlign.center,
         ),
       );
@@ -341,6 +365,7 @@ class DeclensionTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
+        width: MediaQuery.of(context).size.width - 100,
         height: 150.0,
         child: ListView(
           scrollDirection: Axis.horizontal,
